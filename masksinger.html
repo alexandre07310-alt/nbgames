@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🎭 Mask Singer 2026</title>
+<style>
+:root {
+  --bg: #08081a;
+  --surface: #12122a;
+  --surface2: #1c1c38;
+  --surface3: #26264a;
+  --gold: #f5c518;
+  --gold2: #c9a000;
+  --text: #f0f0ff;
+  --muted: #8888aa;
+  --danger: #e74c3c;
+  --success: #2ecc71;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+/* ── Profile ── */
+.view-profile { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; background: radial-gradient(ellipse at 50% 30%, #2a0a4a 0%, var(--bg) 65%); }
+.view-profile .logo { font-size: 4rem; margin-bottom: 0.5rem; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.view-profile h1 { font-size: 2.4rem; color: var(--gold); text-shadow: 0 0 30px rgba(245,197,24,.5); margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+.view-profile .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 3rem; }
+.profile-cards { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+.profile-card { background: var(--surface); border: 2px solid var(--surface3); border-radius: var(--r); padding: 2rem 2.5rem; text-align: center; cursor: pointer; transition: all .2s; }
+.profile-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 10px 30px rgba(245,197,24,.2); }
+.profile-card .av { font-size: 3.5rem; margin-bottom: 0.75rem; }
+.profile-card .nm { font-size: 1.15rem; font-weight: 700; }
+
+/* ── Header ── */
+.hdr { position: sticky; top: 0; z-index: 100; background: rgba(8,8,26,.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--surface2); padding: .7rem 1rem; display: flex; align-items: center; gap: .6rem; }
+.hdr-back { background: none; border: none; color: var(--gold); font-size: 1.4rem; cursor: pointer; padding: .2rem .4rem; line-height: 1; flex-shrink: 0; }
+.hdr-title { flex: 1; font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-btn { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: .3rem; }
+.hdr-profile { background: var(--surface); border: 1px solid var(--gold); color: var(--gold); border-radius: 20px; padding: .3rem .8rem; font-size: .8rem; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
+
+/* ── Characters ── */
+.view-chars { padding: .75rem .75rem 5rem; }
+.chars-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; padding: 0 .25rem; }
+.chars-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .6rem; }
+.char-card { background: var(--surface); border-radius: var(--r); overflow: hidden; cursor: pointer; border: 1.5px solid transparent; transition: transform .15s, border-color .15s; position: relative; }
+.char-card:active { transform: scale(.97); }
+.char-card.done { border-color: var(--gold); opacity: .75; }
+.char-img-wrap { height: 105px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; overflow: hidden; position: relative; }
+.char-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.char-body { padding: .55rem .7rem .65rem; }
+.char-name { font-weight: 700; font-size: .88rem; }
+.char-status { font-size: .7rem; color: var(--muted); margin-top: .15rem; }
+.char-badge { position: absolute; top: 6px; right: 6px; background: var(--gold); color: #000; font-size: .6rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+.add-card { background: var(--surface); border: 2px dashed var(--surface3); border-radius: var(--r); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 168px; cursor: pointer; color: var(--muted); gap: .4rem; font-size: .8rem; transition: all .2s; }
+.add-card:hover { border-color: var(--gold); color: var(--gold); }
+.add-card .plus { font-size: 2rem; }
+
+/* ── Detail ── */
+.view-detail { padding-bottom: 3rem; }
+.detail-hero { display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem 1rem; text-align: center; }
+.detail-char-emoji { font-size: 5rem; margin-bottom: .5rem; }
+.detail-char-img { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 2px solid var(--gold); margin-bottom: .5rem; }
+.detail-char-name { font-size: 1.7rem; font-weight: 800; color: var(--gold); }
+
+/* ── Jokers ── */
+.jokers-box { margin: .6rem .75rem; background: var(--surface); border-radius: var(--r); padding: .75rem; }
+.jokers-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .55rem; }
+.jokers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; }
+.jbtn { background: var(--surface2); border: 1.5px solid transparent; border-radius: 8px; padding: .5rem .6rem; cursor: pointer; color: var(--text); text-align: left; font-family: inherit; transition: all .2s; position: relative; min-height: 52px; }
+.jbtn:not(:disabled):hover { border-color: var(--gold); }
+.jbtn:disabled { opacity: .35; cursor: not-allowed; }
+.jbtn .ji { font-size: 1.1rem; display: block; margin-bottom: .1rem; }
+.jbtn .jl { font-size: .72rem; font-weight: 700; display: block; }
+.jbtn .jc { position: absolute; top: 4px; right: 7px; font-size: .65rem; color: var(--gold); font-weight: 700; }
+.jbtn.red { border-color: rgba(231,76,60,.4); }
+.jbtn.red:not(:disabled):hover { border-color: var(--danger); }
+
+/* ── Sections ── */
+.section { margin: .6rem .75rem; background: var(--surface); border-radius: var(--r); overflow: hidden; }
+.sec-hdr { padding: .65rem 1rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--surface2); }
+.sec-icon { font-size: 1rem; }
+.sec-title { font-weight: 700; font-size: .9rem; flex: 1; }
+.sec-pts { background: var(--gold); color: #000; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; }
+.sec-body { padding: .7rem 1rem; }
+.reveal-section { margin: .6rem .75rem; background: linear-gradient(135deg,#1a0a32,#0a1a32); border: 1.5px solid var(--gold); border-radius: var(--r); overflow: hidden; }
+.reveal-section .sec-hdr { background: rgba(245,197,24,.08); border-bottom-color: rgba(245,197,24,.3); }
+.reveal-section .sec-title { color: var(--gold); }
+
+/* ── Inputs ── */
+textarea, input[type=text] { width: 100%; background: var(--surface2); border: 1.5px solid transparent; border-radius: 8px; color: var(--text); padding: .65rem .8rem; font-size: .9rem; font-family: inherit; resize: vertical; transition: border-color .2s; }
+textarea:focus, input[type=text]:focus { outline: none; border-color: var(--gold); }
+input.center { text-align: center; font-size: 1.1rem; }
+.bet-display { background: var(--surface2); border-radius: 8px; padding: .65rem .8rem; font-size: .9rem; display: flex; align-items: center; gap: .5rem; min-height: 42px; }
+.bet-display.blocked { border: 1.5px solid var(--danger); color: var(--danger); font-size: .85rem; }
+.edits-left { margin-left: auto; font-size: .68rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.imp-hidden { display: flex; align-items: center; gap: .5rem; }
+.imp-text { background: var(--surface2); border-radius: 8px; padding: .65rem .8rem; font-style: italic; font-size: .9rem; color: var(--text); }
+
+/* ── Buttons ── */
+.btn { border: none; border-radius: 8px; padding: .55rem 1.1rem; font-size: .85rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { background: var(--gold2); }
+.btn-sec { background: var(--surface2); color: var(--text); border: 1.5px solid var(--surface3); }
+.btn-sec:hover { border-color: var(--gold); }
+.btn-outline { background: transparent; border: 1.5px solid var(--muted); color: var(--muted); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: .4rem .8rem; font-size: .78rem; }
+.btns { display: flex; gap: .5rem; margin-top: .5rem; }
+
+/* ── Scoreboard ── */
+.view-score { padding: .75rem .75rem 3rem; }
+.score-card { background: var(--surface); border-radius: var(--r); padding: 1rem 1.1rem; margin-bottom: .65rem; }
+.score-top { display: flex; align-items: center; gap: .65rem; margin-bottom: .5rem; }
+.score-rank { font-size: 1.8rem; }
+.score-pname { font-size: 1.1rem; font-weight: 700; flex: 1; }
+.score-total { font-size: 2rem; font-weight: 800; color: var(--gold); line-height: 1; }
+.score-unit { font-size: .75rem; color: var(--muted); }
+.score-breakdown { border-top: 1px solid var(--surface2); margin-top: .65rem; padding-top: .65rem; }
+.score-row { display: flex; justify-content: space-between; align-items: center; padding: .25rem 0; font-size: .82rem; }
+.score-row-char { color: var(--muted); display: flex; align-items: center; gap: .3rem; }
+.score-cells { display: flex; gap: .35rem; font-size: .72rem; align-items: center; }
+.score-pts-total { font-weight: 700; color: var(--gold); font-size: .8rem; }
+.no-data { color: var(--muted); font-size: .82rem; margin-top: .5rem; }
+
+/* ── Modal ── */
+.modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 200; display: flex; align-items: flex-end; padding: 1rem; }
+.modal-ov.center { align-items: center; }
+.modal-box { background: var(--surface); width: 100%; max-width: 520px; margin: 0 auto; border-radius: var(--r) var(--r) 0 0; max-height: 88vh; overflow-y: auto; }
+.modal-ov.center .modal-box { border-radius: var(--r); max-height: 80vh; }
+.m-hdr { padding: .9rem 1rem; border-bottom: 1px solid var(--surface2); display: flex; align-items: center; gap: .5rem; }
+.m-title { font-size: 1rem; font-weight: 700; flex: 1; }
+.m-close { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0 .3rem; }
+.m-body { padding: 1rem; }
+.m-footer { padding: .75rem 1rem; border-top: 1px solid var(--surface2); display: flex; gap: .5rem; justify-content: flex-end; }
+
+/* ── Result table ── */
+.res-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.res-table th { color: var(--muted); font-weight: 600; padding: .4rem .3rem; text-align: left; border-bottom: 1px solid var(--surface2); }
+.res-table td { padding: .45rem .3rem; border-top: 1px solid var(--surface2); vertical-align: top; }
+.c-ok { color: var(--success); font-weight: 700; }
+.c-ko { color: var(--danger); }
+.c-bl { color: var(--muted); font-style: italic; }
+.c-mt { color: var(--muted); font-style: italic; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1.5px solid var(--gold); color: var(--text); padding: .55rem 1.3rem; border-radius: 20px; font-size: .83rem; z-index: 300; transition: transform .3s; white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Utils ── */
+.hidden { display: none !important; }
+.mt { margin-top: .5rem; }
+.mtm { margin-top: 1rem; }
+.txt-muted { color: var(--muted); font-size: .83rem; }
+.txt-gold { color: var(--gold); }
+.txt-s { color: var(--success); }
+.txt-d { color: var(--danger); }
+.divider { height: 1px; background: var(--surface2); margin: .75rem 0; }
+label.lbl { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .35rem; }
+
+/* ── Spy modal rows ── */
+.spy-row { margin-bottom: .65rem; }
+.spy-row-label { font-size: .72rem; color: var(--muted); margin-bottom: .25rem; }
+.spy-val { background: var(--surface2); border-radius: 8px; padding: .6rem .8rem; font-size: .88rem; }
+.spy-val.empty { color: var(--muted); font-style: italic; }
+.spy-val.blocked { color: var(--danger); }
+
+/* ── Scores summary bar ── */
+.score-bar { display: flex; justify-content: space-around; background: var(--surface); border-radius: var(--r); padding: .9rem; margin-bottom: .65rem; }
+.score-bar-item { text-align: center; }
+.score-bar-name { font-size: .75rem; color: var(--muted); margin-bottom: .25rem; }
+.score-bar-val { font-size: 1.6rem; font-weight: 800; color: var(--gold); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-el" class="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const CHARS_DEFAULT = [
+  { id:'ane',        name:'Âne',            emoji:'🫏', bg:'#3a1f05' },
+  { id:'avocat',     name:'Avocat',          emoji:'🥑', bg:'#1a3a10' },
+  { id:'bouquet',    name:'Bouquet',         emoji:'💐', bg:'#3a0e28' },
+  { id:'caillou',    name:'Caillou',         emoji:'🪨', bg:'#2a2a2a' },
+  { id:'chouette',   name:'Chouette',        emoji:'🦉', bg:'#2e1a08' },
+  { id:'clown',      name:'Clown',           emoji:'🤡', bg:'#3a0808' },
+  { id:'cyborg',     name:'Cyborg',          emoji:'🤖', bg:'#081638' },
+  { id:'momie',      name:'Momie',           emoji:'🧟', bg:'#2e2808' },
+  { id:'panthere',   name:'Panthère noire',  emoji:'🐾', bg:'#080816' },
+  { id:'poupees',    name:'Poupées russes',  emoji:'🪆', bg:'#3a1205' },
+  { id:'poussin',    name:'Poussin',         emoji:'🐣', bg:'#3a2c00' },
+  { id:'sanglier',   name:'Sanglier',        emoji:'🐗', bg:'#1e0f05' },
+  { id:'venitienne', name:'Vénitienne',      emoji:'🎭', bg:'#200a30' },
+];
+const PROFILES = ['Alexandre','Axelle'];
+const PAV = { Alexandre:'👨', Axelle:'👩' };
+const PTS = { impression:10, bet2:5, bet3:3, bet4:1 };
+
+function mkPlayerData() {
+  return {
+    impression: { text:'', validated:false, shown:false, blocked:false },
+    notes: '',
+    bet2: { text:'', validated:false, edits:0, maxEdits:1, blocked:false },
+    bet3: { text:'', validated:false, edits:0, maxEdits:2, blocked:false },
+    bet4: { text:'', validated:false, edits:0, maxEdits:3, blocked:false },
+  };
+}
+function mkJokers() {
+  return { j1:{used:false}, j2:{left:3}, j3:{used:false}, j4:{left:3} };
+}
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let S = loadState();
+let view = 'chars';   // profile | chars | detail | scoreboard
+let detailId = null;
+let editingBets = {}; // key: charId+betNum → true/false
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('ms2026_v2');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    profile: null,
+    chars: JSON.parse(JSON.stringify(CHARS_DEFAULT)),
+    pdata: { Alexandre:{}, Axelle:{} },
+    jokers: { Alexandre:mkJokers(), Axelle:mkJokers() },
+    reveals: {},
+  };
+}
+function save() {
+  localStorage.setItem('ms2026_v2', JSON.stringify(S));
+}
+function pd(profile, charId) {
+  if (!S.pdata[profile]) S.pdata[profile] = {};
+  if (!S.pdata[profile][charId]) S.pdata[profile][charId] = mkPlayerData();
+  return S.pdata[profile][charId];
+}
+function opp(p) { return p === 'Alexandre' ? 'Axelle' : 'Alexandre'; }
+function norm(s) {
+  if (!s) return '';
+  return String(s).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/['']/g,"'");
+}
+function match(a, b) { return !!a && !!b && norm(a) === norm(b); }
+function getChar(id) { return S.chars.find(c => c.id === id); }
+
+// ══════════════════════════════════════
+// SCORING
+// ══════════════════════════════════════
+function calcScores() {
+  const scores = { Alexandre:0, Axelle:0 };
+  const details = { Alexandre:{}, Axelle:{} };
+  for (const c of S.chars) {
+    const rev = S.reveals[c.id];
+    if (!rev?.answer) continue;
+    for (const p of PROFILES) {
+      const d = pd(p, c.id);
+      let pts = 0;
+      const det = {};
+      const check = (field, key, val) => {
+        if (field.blocked) { det[key] = 'blocked'; return; }
+        if (!field.validated || !field.text) { det[key] = null; return; }
+        if (match(field.text, rev.answer)) { pts += val; det[key] = val; }
+        else det[key] = 0;
+      };
+      check(d.impression, 'imp', 10);
+      check(d.bet2, 'b2', 5);
+      check(d.bet3, 'b3', 3);
+      check(d.bet4, 'b4', 1);
+      scores[p] += pts;
+      details[p][c.id] = { pts, ...det };
+    }
+  }
+  return { scores, details };
+}
+
+// ══════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  if (!S.profile) { app.innerHTML = renderProfile(); return; }
+  if (view === 'detail') { app.innerHTML = renderDetail(detailId); return; }
+  if (view === 'scoreboard') { app.innerHTML = renderScoreboard(); return; }
+  app.innerHTML = renderChars();
+}
+function nav(v, cid) {
+  view = v;
+  if (cid !== undefined) detailId = cid;
+  editingBets = {};
+  render();
+}
+
+// ── Profile ──────────────────────────
+function renderProfile() {
+  return `
+    <div class="view-profile">
+      <div class="logo">🎭</div>
+      <h1>Mask Singer</h1>
+      <p class="subtitle">Saison 9 &middot; 24 avril 2026</p>
+      <p class="txt-muted" style="margin-bottom:2rem">Qui joue ?</p>
+      <div class="profile-cards">
+        ${PROFILES.map(p=>`
+          <div class="profile-card" onclick="selProfile('${p}')">
+            <div class="av">${PAV[p]}</div>
+            <div class="nm">${p}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── Characters ───────────────────────
+function renderChars() {
+  const { scores } = calcScores();
+  const p = S.profile;
+  return `
+    <div class="hdr">
+      <span style="font-size:1.2rem">🎭</span>
+      <span class="hdr-title">Mask Singer S9</span>
+      <button class="hdr-btn" onclick="nav('scoreboard')" title="Classement">🏆</button>
+      <button class="hdr-profile" onclick="profileMenu()">${PAV[p]} ${p}</button>
+    </div>
+    <div class="view-chars">
+      <div class="chars-top">
+        <span class="txt-muted">Choisissez un personnage</span>
+        <span class="txt-gold" style="font-weight:700;font-size:.85rem">${scores[p]} pts</span>
+      </div>
+      <div class="chars-grid">
+        ${S.chars.map(c => renderCharCard(c, p)).join('')}
+        <div class="add-card" onclick="showAddChar()">
+          <span class="plus">➕</span>
+          <span>Ajouter un perso</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCharCard(c, p) {
+  const d = pd(p, c.id);
+  const rev = S.reveals[c.id];
+  const isDone = !!(rev?.answer);
+  let status = '';
+  if (isDone) status = `✅ ${rev.answer}`;
+  else if (d.bet4.validated||d.bet3.validated||d.bet2.validated) status = '📝 Paris en cours';
+  else if (d.impression.validated) status = '💭 1ère impression ✓';
+  const imgHtml = c.imgUrl
+    ? `<img src="${c.imgUrl}" alt="${c.name}" onerror="this.style.display='none'"><span style="display:none">${c.emoji}</span>`
+    : `<span>${c.emoji}</span>`;
+  return `
+    <div class="char-card${isDone?' done':''}" onclick="nav('detail','${c.id}')">
+      <div class="char-img-wrap" style="background:${c.bg}">
+        ${imgHtml}
+        ${isDone?`<span class="char-badge">RÉVÉLÉ</span>`:''}
+      </div>
+      <div class="char-body">
+        <div class="char-name">${c.name}</div>
+        ${status?`<div class="char-status">${status}</div>`:''}
+      </div>
+    </div>`;
+}
+
+// ── Detail ───────────────────────────
+function renderDetail(cid) {
+  const c = getChar(cid);
+  if (!c) return '';
+  const p = S.profile;
+  const rev = S.reveals[cid];
+  const heroImg = c.imgUrl
+    ? `<img src="${c.imgUrl}" alt="${c.name}" class="detail-char-img" onerror="this.style.display='none';document.getElementById('demoji_${cid}').style.display='block'"><div id="demoji_${cid}" class="detail-char-emoji" style="display:none">${c.emoji}</div>`
+    : `<div class="detail-char-emoji">${c.emoji}</div>`;
+  return `
+    <div class="hdr">
+      <button class="hdr-back" onclick="nav('chars')">←</button>
+      <span class="hdr-title">${c.name}</span>
+      <button class="hdr-btn" onclick="nav('scoreboard')">🏆</button>
+      <button class="hdr-profile" onclick="profileMenu()">${PAV[p]} ${p.charAt(0)}</button>
+    </div>
+    <div class="view-detail">
+      <div class="detail-hero" style="background:linear-gradient(180deg,${c.bg}99 0%,transparent 100%)">
+        ${heroImg}
+        <div class="detail-char-name">${c.name}</div>
+      </div>
+      ${renderJokers(cid)}
+      ${renderImpression(cid)}
+      ${renderNotes(cid)}
+      ${renderBet(cid,2,'5 pts')}
+      ${renderBet(cid,3,'3 pts')}
+      ${renderBet(cid,4,'1 pt')}
+      ${renderReveal(cid)}
+    </div>`;
+}
+
+function renderJokers(cid) {
+  const p = S.profile;
+  const j = S.jokers[p];
+  const o = opp(p);
+  return `
+    <div class="jokers-box">
+      <div class="jokers-label">🃏 Jokers — contre ${o}</div>
+      <div class="jokers-grid">
+        <button class="jbtn" ${j.j1.used?'disabled':''} onclick="joker1('${cid}')">
+          <span class="ji">👁️</span><span class="jl">Tout espionner</span>
+          <span class="jc">${j.j1.used?'✗':'×1'}</span>
+        </button>
+        <button class="jbtn" ${j.j2.left===0?'disabled':''} onclick="joker2('${cid}')">
+          <span class="ji">🔍</span><span class="jl">Espionner paris</span>
+          <span class="jc">${j.j2.left>0?'×'+j.j2.left:'✗'}</span>
+        </button>
+        <button class="jbtn red" ${j.j3.used?'disabled':''} onclick="joker3('${cid}')">
+          <span class="ji">🚫</span><span class="jl">Bloquer impression</span>
+          <span class="jc">${j.j3.used?'✗':'×1'}</span>
+        </button>
+        <button class="jbtn red" ${j.j4.left===0?'disabled':''} onclick="joker4('${cid}')">
+          <span class="ji">⛔</span><span class="jl">Bloquer un pari</span>
+          <span class="jc">${j.j4.left>0?'×'+j.j4.left:'✗'}</span>
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderImpression(cid) {
+  const d = pd(S.profile, cid);
+  const imp = d.impression;
+  let body;
+  if (imp.blocked) {
+    body = `<div class="bet-display blocked">🚫 1ère impression bloquée par ${opp(S.profile)}</div>`;
+  } else if (!imp.validated) {
+    body = `
+      <textarea id="inp_imp_${cid}" placeholder="Votre 1ère impression…" rows="2">${imp.text||''}</textarea>
+      <div class="btns"><button class="btn btn-gold btn-sm" onclick="validateImp('${cid}')">Valider</button></div>`;
+  } else if (imp.shown) {
+    body = `
+      <div class="imp-text">"${imp.text}"</div>
+      <div class="btns"><button class="btn btn-outline btn-sm" onclick="hideImp('${cid}')">Masquer</button></div>`;
+  } else {
+    body = `
+      <div class="imp-hidden">
+        <span class="txt-muted">💭 Cachée</span>
+        <button class="btn btn-outline btn-sm" onclick="showImp('${cid}')">Révéler</button>
+      </div>`;
+  }
+  return `
+    <div class="section">
+      <div class="sec-hdr"><span class="sec-icon">💭</span><span class="sec-title">1ère Impression</span><span class="sec-pts">10 pts</span></div>
+      <div class="sec-body">${body}</div>
+    </div>`;
+}
+
+function renderNotes(cid) {
+  const d = pd(S.profile, cid);
+  return `
+    <div class="section">
+      <div class="sec-hdr"><span class="sec-icon">📓</span><span class="sec-title">Bloc-notes · Indices</span></div>
+      <div class="sec-body">
+        <textarea id="inp_notes_${cid}" placeholder="Notez les indices ici…" rows="3" oninput="saveNotes('${cid}')">${d.notes||''}</textarea>
+      </div>
+    </div>`;
+}
+
+function renderBet(cid, num, pts) {
+  const d = pd(S.profile, cid);
+  const bet = d['bet'+num];
+  const eKey = cid+'_'+num;
+  const isEditing = editingBets[eKey];
+  const editsLeft = bet.maxEdits - bet.edits;
+  const icons = {2:'🥈',3:'🥉',4:'4️⃣'};
+  let body;
+  if (bet.blocked) {
+    body = `<div class="bet-display blocked">⛔ Pari bloqué par ${opp(S.profile)}</div>`;
+  } else if (!bet.validated) {
+    body = `
+      <textarea id="inp_bet_${cid}_${num}" placeholder="Votre proposition…" rows="1" style="resize:none">${bet.text||''}</textarea>
+      <div class="btns"><button class="btn btn-gold btn-sm" onclick="validateBet('${cid}',${num})">Valider</button></div>`;
+  } else if (isEditing) {
+    body = `
+      <textarea id="inp_bet_${cid}_${num}" placeholder="Modifier…" rows="1" style="resize:none">${bet.text||''}</textarea>
+      <div class="btns">
+        <button class="btn btn-gold btn-sm" onclick="confirmEdit('${cid}',${num})">Confirmer</button>
+        <button class="btn btn-outline btn-sm" onclick="cancelEdit('${cid}',${num})">Annuler</button>
+      </div>`;
+  } else {
+    body = `
+      <div class="bet-display">
+        <span>${bet.text||'—'}</span>
+        <span class="edits-left">${editsLeft>0?editsLeft+` modif. restante${editsLeft>1?'s':''}`:' Final ✓'}</span>
+      </div>
+      ${editsLeft>0?`<div class="btns"><button class="btn btn-sec btn-sm" onclick="startEdit('${cid}',${num})">✏️ Modifier</button></div>`:''}`;
+  }
+  return `
+    <div class="section">
+      <div class="sec-hdr"><span class="sec-icon">${icons[num]}</span><span class="sec-title">Pari N°${num}</span><span class="sec-pts">${pts}</span></div>
+      <div class="sec-body">${body}</div>
+    </div>`;
+}
+
+function renderReveal(cid) {
+  const rev = S.reveals[cid];
+  let body;
+  if (rev?.answer) {
+    body = `
+      <div style="text-align:center;padding:.5rem 0">
+        <div class="txt-muted" style="font-size:.8rem">Révélation :</div>
+        <div class="txt-gold" style="font-size:1.8rem;font-weight:800;margin:.3rem 0">${rev.answer}</div>
+        <button class="btn btn-outline btn-sm" onclick="showResultModal('${cid}')">📊 Voir le bilan</button>
+      </div>`;
+  } else {
+    body = `
+      <p class="txt-muted" style="margin-bottom:.75rem;font-size:.82rem">Quand le masque tombe, entrez la vraie identité.</p>
+      <input type="text" id="inp_rev_${cid}" placeholder="Prénom Nom…" class="center" />
+      <div class="btns" style="justify-content:center;margin-top:.75rem">
+        <button class="btn btn-gold" onclick="submitReveal('${cid}')">🎭 Révéler !</button>
+      </div>`;
+  }
+  return `
+    <div class="reveal-section">
+      <div class="sec-hdr"><span class="sec-icon">🎭</span><span class="sec-title">Révélation</span></div>
+      <div class="sec-body">${body}</div>
+    </div>`;
+}
+
+// ── Scoreboard ───────────────────────
+function renderScoreboard() {
+  const { scores, details } = calcScores();
+  const sorted = [...PROFILES].sort((a,b)=>scores[b]-scores[a]);
+  const revealed = S.chars.filter(c=>S.reveals[c.id]?.answer);
+  return `
+    <div class="hdr">
+      <button class="hdr-back" onclick="nav('chars')">←</button>
+      <span class="hdr-title">🏆 Classement</span>
+    </div>
+    <div class="view-score">
+      <div class="score-bar">
+        ${sorted.map((p,i)=>`
+          <div class="score-bar-item">
+            <div class="score-bar-name">${i===0?'🥇':'🥈'} ${PAV[p]} ${p}</div>
+            <div class="score-bar-val">${scores[p]}</div>
+            <div style="font-size:.7rem;color:var(--muted)">points</div>
+          </div>`).join('')}
+      </div>
+      ${sorted.map((p,i)=>`
+        <div class="score-card">
+          <div class="score-top">
+            <span class="score-rank">${i===0?'🥇':'🥈'}</span>
+            <span class="score-pname">${PAV[p]} ${p}</span>
+            <div><span class="score-total">${scores[p]}</span><span class="score-unit"> pts</span></div>
+          </div>
+          ${revealed.length>0?`
+            <div class="score-breakdown">
+              <div style="font-size:.7rem;color:var(--muted);margin-bottom:.4rem">Détail 💭×10 · 2×5 · 3×3 · 4×1</div>
+              ${revealed.map(c=>{
+                const det = details[p][c.id]||{};
+                const fmt = v => v==='blocked'?'🚫':v===null||v===undefined?'—':v>0?`✅${v}`:'❌';
+                return `
+                  <div class="score-row">
+                    <span class="score-row-char"><span>${c.emoji}</span>${c.name}</span>
+                    <span class="score-cells">
+                      <span title="Impression">${fmt(det.imp)}</span>
+                      <span title="Pari 2">${fmt(det.b2)}</span>
+                      <span title="Pari 3">${fmt(det.b3)}</span>
+                      <span title="Pari 4">${fmt(det.b4)}</span>
+                      <span class="score-pts-total">${det.pts||0}p</span>
+                    </span>
+                  </div>`;
+              }).join('')}
+            </div>`:`<p class="no-data">Aucune révélation pour l'instant.</p>`}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════
+function selProfile(p) {
+  S.profile = p;
+  save();
+  view = 'chars';
+  render();
+  toast(`Bienvenue ${p} ! 🎭`);
+}
+
+function profileMenu() {
+  modal(`
+    <div class="m-hdr"><span class="m-title">Changer de profil</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <p class="txt-muted" style="margin-bottom:1rem">Profil actuel : <strong>${S.profile}</strong></p>
+      <div style="display:flex;gap:.75rem">
+        ${PROFILES.map(p=>`
+          <button class="btn ${p===S.profile?'btn-gold':'btn-sec'}" style="flex:1" onclick="selProfile('${p}');closeModal()">
+            ${PAV[p]} ${p}
+          </button>`).join('')}
+      </div>
+    </div>`);
+}
+
+function showAddChar() {
+  modal(`
+    <div class="m-hdr"><span class="m-title">Ajouter un personnage</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <div style="margin-bottom:.75rem">
+        <label class="lbl">Nom *</label>
+        <input type="text" id="ac_name" placeholder="Ex: Dragon, Papillon…" />
+      </div>
+      <div style="margin-bottom:.75rem">
+        <label class="lbl">Emoji</label>
+        <input type="text" id="ac_emoji" value="🎭" style="width:80px;text-align:center;font-size:1.4rem" maxlength="4" />
+      </div>
+      <div>
+        <label class="lbl">URL image (optionnel)</label>
+        <input type="text" id="ac_img" placeholder="https://…" />
+      </div>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-sec" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-gold" onclick="addChar()">Ajouter</button>
+    </div>`);
+}
+
+function addChar() {
+  const name = document.getElementById('ac_name')?.value?.trim();
+  if (!name) { toast('Entrez un nom !'); return; }
+  const emoji = document.getElementById('ac_emoji')?.value?.trim()||'🎭';
+  const imgUrl = document.getElementById('ac_img')?.value?.trim()||'';
+  const bgs = ['#1a0a38','#08183a','#380a1a','#0a381a','#381a08','#1a380a'];
+  const bg = bgs[S.chars.length % bgs.length];
+  const id = 'c_'+Date.now();
+  S.chars.push({ id, name, emoji, bg, imgUrl });
+  save();
+  closeModal();
+  render();
+  toast(`${emoji} ${name} ajouté !`);
+}
+
+// ── Impression ──
+function validateImp(cid) {
+  const el = document.getElementById(`inp_imp_${cid}`);
+  const txt = el?.value?.trim();
+  if (!txt) { toast('Entrez votre impression !'); return; }
+  const d = pd(S.profile, cid);
+  d.impression.text = txt;
+  d.impression.validated = true;
+  d.impression.shown = false;
+  save(); render(); toast('1ère impression enregistrée 🔒');
+}
+function showImp(cid) { pd(S.profile,cid).impression.shown=true; save(); render(); }
+function hideImp(cid) { pd(S.profile,cid).impression.shown=false; save(); render(); }
+
+// ── Notes ──
+function saveNotes(cid) {
+  const el = document.getElementById(`inp_notes_${cid}`);
+  if (el) { pd(S.profile,cid).notes = el.value; save(); }
+}
+
+// ── Bets ──
+function validateBet(cid, num) {
+  const el = document.getElementById(`inp_bet_${cid}_${num}`);
+  const txt = el?.value?.trim();
+  if (!txt) { toast('Entrez votre pari !'); return; }
+  const d = pd(S.profile, cid);
+  d['bet'+num].text = txt;
+  d['bet'+num].validated = true;
+  save(); editingBets[cid+'_'+num]=false; render(); toast(`Pari ${num} validé ✓`);
+}
+function startEdit(cid, num) {
+  editingBets[cid+'_'+num] = true;
+  render();
+  setTimeout(()=>{ const el=document.getElementById(`inp_bet_${cid}_${num}`); if(el){el.focus();el.select();} },50);
+}
+function cancelEdit(cid, num) { editingBets[cid+'_'+num]=false; render(); }
+function confirmEdit(cid, num) {
+  const el = document.getElementById(`inp_bet_${cid}_${num}`);
+  const txt = el?.value?.trim();
+  if (!txt) { toast('Entrez votre pari !'); return; }
+  const bet = pd(S.profile,cid)['bet'+num];
+  bet.text = txt; bet.edits++;
+  save(); editingBets[cid+'_'+num]=false; render(); toast(`Pari ${num} modifié ✓`);
+}
+
+// ── Jokers ──
+function joker1(cid) {
+  const j = S.jokers[S.profile];
+  if (j.j1.used) return;
+  const c = getChar(cid);
+  modal(`
+    <div class="m-hdr"><span class="m-title">👁️ Tout espionner</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <p class="txt-muted" style="margin-bottom:1rem">Vous allez voir <strong>TOUT</strong> ce que ${opp(S.profile)} a mis pour <strong>${c.name}</strong>, y compris sa 1ère impression.</p>
+      <p class="txt-muted" style="font-size:.8rem">⚠️ Ce joker est utilisable <strong>1 seule fois</strong>.</p>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-sec" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-gold" onclick="j1reveal('${cid}')">Utiliser le joker</button>
+    </div>`);
+}
+function j1reveal(cid) {
+  S.jokers[S.profile].j1.used = true; save();
+  const o = opp(S.profile);
+  const d = pd(o, cid);
+  const c = getChar(cid);
+  const spyRow = (label, field, txt) => {
+    let cls='', content='';
+    if (field.blocked) { cls='blocked'; content='Bloqué'; }
+    else if (!field.validated || !field.text) { cls='empty'; content='Non rempli'; }
+    else content = `"${field.text}"`;
+    return `<div class="spy-row"><div class="spy-row-label">${label}</div><div class="spy-val ${cls}">${content}</div></div>`;
+  };
+  modal(`
+    <div class="m-hdr"><span class="m-title">👁️ ${c.name} — réponses de ${o}</span><button class="m-close" onclick="closeModalAndRender()">✕</button></div>
+    <div class="m-body">
+      ${spyRow('💭 1ère Impression',d.impression,d.impression.text)}
+      ${spyRow('Pari 2',d.bet2,d.bet2.text)}
+      ${spyRow('Pari 3',d.bet3,d.bet3.text)}
+      ${spyRow('Pari 4',d.bet4,d.bet4.text)}
+    </div>
+    <div class="m-footer"><button class="btn btn-sec" onclick="closeModalAndRender()">Fermer</button></div>
+  `, true);
+}
+
+function joker2(cid) {
+  const j = S.jokers[S.profile];
+  if (j.j2.left===0) return;
+  const c = getChar(cid);
+  modal(`
+    <div class="m-hdr"><span class="m-title">🔍 Espionner paris</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <p class="txt-muted" style="margin-bottom:1rem">Voir les paris 2, 3 et 4 de <strong>${opp(S.profile)}</strong> pour <strong>${c.name}</strong>.</p>
+      <p class="txt-muted" style="font-size:.8rem">Il reste <strong>${j.j2.left}</strong> utilisation${j.j2.left>1?'s':''} sur ce joker.</p>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-sec" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-gold" onclick="j2reveal('${cid}')">Utiliser (${j.j2.left} restants)</button>
+    </div>`);
+}
+function j2reveal(cid) {
+  S.jokers[S.profile].j2.left--; save();
+  const o = opp(S.profile);
+  const d = pd(o, cid);
+  const c = getChar(cid);
+  const spyRow = (label, field) => {
+    let cls='', content='';
+    if (field.blocked) { cls='blocked'; content='Bloqué'; }
+    else if (!field.validated||!field.text) { cls='empty'; content='Non rempli'; }
+    else content=`"${field.text}"`;
+    return `<div class="spy-row"><div class="spy-row-label">${label}</div><div class="spy-val ${cls}">${content}</div></div>`;
+  };
+  modal(`
+    <div class="m-hdr"><span class="m-title">🔍 ${c.name} — paris de ${o}</span><button class="m-close" onclick="closeModalAndRender()">✕</button></div>
+    <div class="m-body">
+      ${spyRow('Pari 2 (5 pts)',d.bet2)}
+      ${spyRow('Pari 3 (3 pts)',d.bet3)}
+      ${spyRow('Pari 4 (1 pt)',d.bet4)}
+      <p class="txt-muted mt" style="font-size:.75rem">Il reste ${S.jokers[S.profile].j2.left} utilisation${S.jokers[S.profile].j2.left!==1?'s':''} du joker 🔍.</p>
+    </div>
+    <div class="m-footer"><button class="btn btn-sec" onclick="closeModalAndRender()">Fermer</button></div>
+  `, true);
+}
+
+function joker3(cid) {
+  const j = S.jokers[S.profile];
+  if (j.j3.used) return;
+  const c = getChar(cid);
+  modal(`
+    <div class="m-hdr"><span class="m-title">🚫 Bloquer l'impression</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <p style="margin-bottom:.75rem">Annuler la 1ère impression de <strong>${opp(S.profile)}</strong> pour <strong>${c.name}</strong> ?</p>
+      <p class="txt-muted" style="font-size:.82rem">Leur réponse sera effacée et ils ne pourront plus en soumettre une. Action irréversible.</p>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-sec" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger" onclick="j3confirm('${cid}')">🚫 Bloquer !</button>
+    </div>`);
+}
+function j3confirm(cid) {
+  const o = opp(S.profile);
+  const d = pd(o, cid);
+  d.impression.blocked=true; d.impression.text=''; d.impression.validated=false;
+  S.jokers[S.profile].j3.used=true;
+  save(); closeModal(); render(); toast(`💥 Impression de ${o} bloquée !`);
+}
+
+function joker4(cid) {
+  const j = S.jokers[S.profile];
+  if (j.j4.left===0) return;
+  const c = getChar(cid);
+  modal(`
+    <div class="m-hdr"><span class="m-title">⛔ Bloquer un pari</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <p style="margin-bottom:1rem">Quel pari de <strong>${opp(S.profile)}</strong> voulez-vous bloquer pour <strong>${c.name}</strong> ?</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        ${[2,3,4].map(n=>`
+          <button class="btn btn-sec" style="display:flex;justify-content:space-between;align-items:center" onclick="j4confirm('${cid}',${n})">
+            <span>⛔ Pari N°${n}</span>
+            <span class="txt-muted" style="font-size:.8rem">${n===2?'5 pts':n===3?'3 pts':'1 pt'}</span>
+          </button>`).join('')}
+      </div>
+      <p class="txt-muted mt" style="font-size:.78rem">Il reste ${j.j4.left} utilisation${j.j4.left>1?'s':''} sur ce joker.</p>
+    </div>
+    <div class="m-footer"><button class="btn btn-sec" onclick="closeModal()">Annuler</button></div>`);
+}
+function j4confirm(cid, num) {
+  const o = opp(S.profile);
+  const bet = pd(o,cid)['bet'+num];
+  bet.blocked=true; bet.text=''; bet.validated=false;
+  S.jokers[S.profile].j4.left--;
+  save(); closeModal(); render(); toast(`💥 Pari ${num} de ${o} bloqué !`);
+}
+
+// ── Revelation ──
+function submitReveal(cid) {
+  const el = document.getElementById(`inp_rev_${cid}`);
+  const answer = el?.value?.trim();
+  if (!answer) { toast('Entrez la vraie identité !'); return; }
+  S.reveals[cid] = { answer, ts: Date.now() };
+  save(); render();
+  setTimeout(()=>showResultModal(cid), 350);
+}
+
+function showResultModal(cid) {
+  const c = getChar(cid);
+  const rev = S.reveals[cid];
+  if (!rev) return;
+  const { scores } = calcScores();
+  const betDefs = [
+    ['impression','💭 1ère Impression',10],
+    ['bet2','Pari N°2',5],
+    ['bet3','Pari N°3',3],
+    ['bet4','Pari N°4',1],
+  ];
+  const cell = (d, key) => {
+    const f = d[key];
+    if (f.blocked) return `<td class="c-bl">🚫 Bloqué</td>`;
+    if (!f.validated||!f.text) return `<td class="c-mt">—</td>`;
+    const ok = match(f.text, rev.answer);
+    const pts = {impression:10,bet2:5,bet3:3,bet4:1}[key];
+    return `<td class="${ok?'c-ok':'c-ko'}">${f.text} ${ok?`✅ +${pts}pts`:'❌'}</td>`;
+  };
+  const rows = betDefs.map(([key,label])=>`
+    <tr>
+      <td style="color:var(--muted);font-size:.78rem;white-space:nowrap">${label}</td>
+      ${cell(pd('Alexandre',cid),key)}
+      ${cell(pd('Axelle',cid),key)}
+    </tr>`).join('');
+
+  modal(`
+    <div class="m-hdr"><span class="m-title">🎭 ${c.emoji} ${c.name} = ${rev.answer}</span><button class="m-close" onclick="closeModal()">✕</button></div>
+    <div class="m-body">
+      <div style="overflow-x:auto">
+        <table class="res-table">
+          <thead><tr><th></th><th>${PAV.Alexandre} Alexandre</th><th>${PAV.Axelle} Axelle</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-around">
+        ${PROFILES.map(p=>`
+          <div style="text-align:center">
+            <div class="txt-muted" style="font-size:.78rem">${PAV[p]} ${p}</div>
+            <div style="font-size:1.7rem;font-weight:800;color:var(--gold)">${scores[p]}</div>
+            <div class="txt-muted" style="font-size:.7rem">points au total</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-sec" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-gold" onclick="closeModal();nav('scoreboard')">🏆 Classement</button>
+    </div>
+  `, true);
+}
+
+// ══════════════════════════════════════
+// MODAL & TOAST
+// ══════════════════════════════════════
+function modal(html, center=false) {
+  document.getElementById('modal-root').innerHTML =
+    `<div class="modal-ov${center?' center':''}" onclick="ovClick(event)">
+      <div class="modal-box">${html}</div>
+    </div>`;
+}
+function closeModal() { document.getElementById('modal-root').innerHTML=''; }
+function closeModalAndRender() { closeModal(); render(); }
+function ovClick(e) { if(e.target.classList.contains('modal-ov')) closeModal(); }
+
+let _toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast-el');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+// ══════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════
+render();
+</script>
+</body>
+</html>
