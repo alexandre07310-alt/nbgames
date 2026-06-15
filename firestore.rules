@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Utilisateurs ──────────────────────────────────────────
+    // Lecture publique (nécessaire pour le classement temps réel)
+    // Création : uniquement sur son propre document, avec validation
+    // Update : tout utilisateur authentifié peut écrire (requis pour autoCalculateAllUsers
+    //          qui calcule le scoring de TOUS les joueurs depuis le client du premier arrivant)
+    // Delete : interdit côté client
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && validUserData(request.resource.data);
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    // ── Réservation de pseudo ─────────────────────────────────
+    // Lecture publique (vérif dispo)
+    // Création : uniquement si on s'assigne à soi-même
+    // Suppression : uniquement si on est le propriétaire
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && username == username.lower();
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ── Config app (match du jour, historique) ────────────────
+    // Lecture publique
+    // Écriture uniquement si authentifié
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+  }
+
+  // ── Validation création de compte ────────────────────────────
+  function validUserData(data) {
+    return data.keys().hasAll(['username', 'points', 'streak'])
+        && data.username is string
+        && data.username.size() >= 3
+        && data.username.size() <= 20
+        && data.points == 0
+        && data.streak == 0;
+  }
+}

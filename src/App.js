@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { auth, db, storage } from "./firebase";
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
@@ -1011,6 +1012,615 @@ function MiniGameChampion({firebaseUser,profile,setProfile}){
   );
 }
 
+/* ─── Culture NBA ─── */
+const NBA_CULTURE_DB=[
+  // champion
+  {q:'Quel équipe a remporté le titre NBA en 2016 ?',a:'Cleveland Cavaliers',cat:'champion',opts:['Golden State Warriors','Cleveland Cavaliers','San Antonio Spurs','Miami Heat']},
+  {q:'Quel équipe a remporté le titre NBA en 2023 ?',a:'Denver Nuggets',cat:'champion',opts:['Miami Heat','Boston Celtics','Denver Nuggets','Golden State Warriors']},
+  {q:'Quel équipe a remporté le titre NBA en 2021 ?',a:'Milwaukee Bucks',cat:'champion',opts:['Phoenix Suns','Milwaukee Bucks','LA Clippers','Atlanta Hawks']},
+  {q:'Quel équipe a remporté le titre NBA en 2019 ?',a:'Toronto Raptors',cat:'champion',opts:['Golden State Warriors','Toronto Raptors','Houston Rockets','Milwaukee Bucks']},
+  {q:'Quel équipe a remporté le titre NBA en 2020 ?',a:'Los Angeles Lakers',cat:'champion',opts:['Miami Heat','Boston Celtics','Los Angeles Lakers','Toronto Raptors']},
+  {q:'Quel équipe a remporté le titre NBA en 2022 ?',a:'Golden State Warriors',cat:'champion',opts:['Boston Celtics','Memphis Grizzlies','Golden State Warriors','Miami Heat']},
+  {q:'Quel équipe a remporté le titre NBA en 2014 ?',a:'San Antonio Spurs',cat:'champion',opts:['Miami Heat','Oklahoma City Thunder','San Antonio Spurs','Indiana Pacers']},
+  {q:'Quel équipe a remporté le titre NBA en 2017 ?',a:'Golden State Warriors',cat:'champion',opts:['Cleveland Cavaliers','San Antonio Spurs','Houston Rockets','Golden State Warriors']},
+  {q:'Quel équipe a remporté le titre NBA en 2018 ?',a:'Golden State Warriors',cat:'champion',opts:['Cleveland Cavaliers','Houston Rockets','Boston Celtics','Golden State Warriors']},
+  {q:'Quel équipe a remporté le titre NBA en 2013 ?',a:'Miami Heat',cat:'champion',opts:['San Antonio Spurs','Indiana Pacers','Miami Heat','Chicago Bulls']},
+  {q:'Quel équipe a remporté le titre NBA en 2024 ?',a:'Boston Celtics',cat:'champion',opts:['Dallas Mavericks','Minnesota Timberwolves','Indiana Pacers','Boston Celtics']},
+  // mvp
+  {q:'Qui a remporté le MVP 2024 ?',a:'Nikola Jokić',cat:'mvp',opts:['Luka Dončić','Shai Gilgeous-Alexander','Nikola Jokić','Giannis Antetokounmpo']},
+  {q:'Qui a remporté le MVP 2023 ?',a:'Joel Embiid',cat:'mvp',opts:['Nikola Jokić','Giannis Antetokounmpo','Joel Embiid','Jayson Tatum']},
+  {q:'Qui a remporté le MVP 2022 ?',a:'Nikola Jokić',cat:'mvp',opts:['Stephen Curry','Kevin Durant','Devin Booker','Nikola Jokić']},
+  {q:'Qui a remporté le MVP 2021 ?',a:'Nikola Jokić',cat:'mvp',opts:['LeBron James','Stephen Curry','Luka Dončić','Nikola Jokić']},
+  {q:'Qui a remporté le MVP 2020 ?',a:'Giannis Antetokounmpo',cat:'mvp',opts:['LeBron James','James Harden','Luka Dončić','Giannis Antetokounmpo']},
+  {q:'Qui a remporté le MVP 2019 ?',a:'Giannis Antetokounmpo',cat:'mvp',opts:['James Harden','Kevin Durant','Stephen Curry','Giannis Antetokounmpo']},
+  {q:'Qui a remporté le MVP 2018 ?',a:'James Harden',cat:'mvp',opts:['LeBron James','Anthony Davis','Paul George','James Harden']},
+  {q:'Qui a remporté le MVP 2016 ?',a:'Stephen Curry',cat:'mvp',opts:['LeBron James','Russell Westbrook','Kawhi Leonard','Stephen Curry']},
+  {q:'Qui a remporté le MVP 2017 ?',a:'Russell Westbrook',cat:'mvp',opts:['James Harden','LeBron James','Kawhi Leonard','Russell Westbrook']},
+  {q:'Qui a remporté le MVP 2015 ?',a:'Stephen Curry',cat:'mvp',opts:['LeBron James','James Harden','Marc Gasol','Stephen Curry']},
+  {q:'Qui a remporté le MVP 2025 ?',a:'Shai Gilgeous-Alexander',cat:'mvp',opts:['Nikola Jokić','Giannis Antetokounmpo','Jayson Tatum','Shai Gilgeous-Alexander']},
+  // finals_mvp
+  {q:'Qui a remporté le MVP des Finales 2023 ?',a:'Nikola Jokić',cat:'finals_mvp',opts:['Jamal Murray','Michael Porter Jr.','Aaron Gordon','Nikola Jokić']},
+  {q:'Qui a remporté le MVP des Finales 2021 ?',a:'Giannis Antetokounmpo',cat:'finals_mvp',opts:['Khris Middleton','Jrue Holiday','Bobby Portis','Giannis Antetokounmpo']},
+  {q:'Qui a remporté le MVP des Finales 2016 ?',a:'LeBron James',cat:'finals_mvp',opts:['Kyrie Irving','Kevin Love','J.R. Smith','LeBron James']},
+  {q:'Qui a remporté le MVP des Finales 2019 ?',a:'Kawhi Leonard',cat:'finals_mvp',opts:['Pascal Siakam','Kyle Lowry','Fred VanVleet','Kawhi Leonard']},
+  {q:'Qui a remporté le MVP des Finales 2020 ?',a:'LeBron James',cat:'finals_mvp',opts:['Anthony Davis','Rajon Rondo','Danny Green','LeBron James']},
+  {q:'Qui a remporté le MVP des Finales 2022 ?',a:'Stephen Curry',cat:'finals_mvp',opts:['Klay Thompson','Jordan Poole','Draymond Green','Stephen Curry']},
+  {q:'Qui a remporté le MVP des Finales 2024 ?',a:'Jaylen Brown',cat:'finals_mvp',opts:['Jayson Tatum','Jrue Holiday','Al Horford','Jaylen Brown']},
+  {q:'Qui a remporté le MVP des Finales 2017 ?',a:'Kevin Durant',cat:'finals_mvp',opts:['Stephen Curry','Klay Thompson','Draymond Green','Kevin Durant']},
+  {q:'Qui a remporté le MVP des Finales 2018 ?',a:'Kevin Durant',cat:'finals_mvp',opts:['Stephen Curry','Klay Thompson','LeBron James','Kevin Durant']},
+  {q:'Qui a remporté le MVP des Finales 2014 ?',a:'Kawhi Leonard',cat:'finals_mvp',opts:['Tim Duncan','Tony Parker','Manu Ginobili','Kawhi Leonard']},
+  // draft
+  {q:'Qui a été sélectionné en 1er choix de la draft 2023 ?',a:'Victor Wembanyama',cat:'draft',opts:['Scoot Henderson','Brandon Miller','Amen Thompson','Victor Wembanyama']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2024 ?',a:'Zaccharie Risacher',cat:'draft',opts:['Alexandre Sarr','Reed Sheppard','Stephon Castle','Zaccharie Risacher']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2022 ?',a:'Paolo Banchero',cat:'draft',opts:['Chet Holmgren','Jabari Smith Jr.','Jaden Ivey','Paolo Banchero']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2021 ?',a:'Cade Cunningham',cat:'draft',opts:['Jalen Green','Evan Mobley','Scottie Barnes','Cade Cunningham']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2020 ?',a:'Anthony Edwards',cat:'draft',opts:['LaMelo Ball','James Wiseman','Isaac Okoro','Anthony Edwards']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2003 ?',a:'LeBron James',cat:'draft',opts:['Carmelo Anthony','Dwyane Wade','Chris Bosh','LeBron James']},
+  {q:'En quelle année LeBron James a-t-il été drafté en 1er ?',a:'2003',cat:'draft',opts:['2002','2003','2004','2005']},
+  {q:'Qui a été sélectionné en 1er choix de la draft 2019 ?',a:'Zion Williamson',cat:'draft',opts:['Ja Morant','RJ Barrett','De\'Andre Hunter','Zion Williamson']},
+  // scoring
+  {q:'Qui détient le record NBA de points par match en carrière ?',a:'Michael Jordan',cat:'scoring',opts:['Wilt Chamberlain','LeBron James','Kevin Durant','Michael Jordan']},
+  {q:'Qui est le meilleur scoreur de la saison 2023-24 ?',a:'Luka Dončić',cat:'scoring',opts:['Jayson Tatum','Kevin Durant','Shai Gilgeous-Alexander','Luka Dončić']},
+  {q:'Quel joueur a scoré 100 points en un seul match ?',a:'Wilt Chamberlain',cat:'scoring',opts:['Michael Jordan','Kobe Bryant','Elgin Baylor','Wilt Chamberlain']},
+  {q:'Qui est le meilleur scoreur de la saison 2024-25 ?',a:'Shai Gilgeous-Alexander',cat:'scoring',opts:['Jayson Tatum','LeBron James','Nikola Jokić','Shai Gilgeous-Alexander']},
+  {q:'Quel joueur a scoré 81 points en un match en 2006 ?',a:'Kobe Bryant',cat:'scoring',opts:['LeBron James','Allen Iverson','Tracy McGrady','Kobe Bryant']},
+  // record
+  {q:'Quelle franchise détient le record de victoires consécutives (33) en NBA ?',a:'Los Angeles Lakers',cat:'record',opts:['Golden State Warriors','Chicago Bulls','Boston Celtics','Los Angeles Lakers']},
+  {q:'Quel joueur détient le record NBA de points en carrière ?',a:'LeBron James',cat:'record',opts:['Kareem Abdul-Jabbar','Karl Malone','Kobe Bryant','LeBron James']},
+  {q:'Quel joueur détient le record NBA de passes en carrière ?',a:'John Stockton',cat:'record',opts:['Magic Johnson','Jason Kidd','Chris Paul','John Stockton']},
+  {q:'Quel joueur détient le record NBA de rebonds en carrière ?',a:'Wilt Chamberlain',cat:'record',opts:['Bill Russell','Dennis Rodman','Kareem Abdul-Jabbar','Wilt Chamberlain']},
+  {q:'Combien de titres NBA les Boston Celtics ont-ils remportés (record) ?',a:'17',cat:'record',opts:['16','17','18','15']},
+  {q:'Quel est le record de victoires en une saison régulière ?',a:'73 victoires (Warriors 2016)',cat:'record',opts:['72 victoires (Bulls 1996)','70 victoires (Lakers 2000)','73 victoires (Warriors 2016)','69 victoires (Spurs 2016)']},
+  // roty
+  {q:'Qui a remporté le trophée de Rookie de l\'année 2023 ?',a:'Paolo Banchero',cat:'roty',opts:['Victor Wembanyama','Keegan Murray','Bennedict Mathurin','Paolo Banchero']},
+  {q:'Qui a remporté le trophée de Rookie de l\'année 2024 ?',a:'Victor Wembanyama',cat:'roty',opts:['Chet Holmgren','Brandon Miller','Scoot Henderson','Victor Wembanyama']},
+  {q:'Qui a remporté le trophée de Rookie de l\'année 2021 ?',a:'LaMelo Ball',cat:'roty',opts:['Anthony Edwards','James Wiseman','Patrick Williams','LaMelo Ball']},
+  {q:'Qui a remporté le trophée de Rookie de l\'année 2020 ?',a:'Ja Morant',cat:'roty',opts:['Zion Williamson','RJ Barrett','Darius Garland','Ja Morant']},
+  {q:'Qui a remporté le trophée de Rookie de l\'année 2022 ?',a:'Scottie Barnes',cat:'roty',opts:['Cade Cunningham','Evan Mobley','Josh Giddey','Scottie Barnes']},
+  // dpoy
+  {q:'Qui a remporté le DPOY 2024 ?',a:'Rudy Gobert',cat:'dpoy',opts:['Bam Adebayo','Brook Lopez','Jaren Jackson Jr.','Rudy Gobert']},
+  {q:'Qui a remporté le DPOY 2023 ?',a:'Jaren Jackson Jr.',cat:'dpoy',opts:['Draymond Green','Rudy Gobert','Brook Lopez','Jaren Jackson Jr.']},
+  {q:'Qui a remporté le DPOY 2022 ?',a:'Marcus Smart',cat:'dpoy',opts:['Rudy Gobert','Mikal Bridges','Draymond Green','Marcus Smart']},
+  {q:'Qui a remporté le DPOY 2021 ?',a:'Rudy Gobert',cat:'dpoy',opts:['Draymond Green','Ben Simmons','Anthony Davis','Rudy Gobert']},
+  {q:'Qui est le joueur avec le plus de DPOY ?',a:'Rudy Gobert',cat:'dpoy',opts:['Dikembe Mutombo','Ben Wallace','Dwight Howard','Rudy Gobert']},
+  {q:'Qui a remporté le DPOY 2025 ?',a:'Victor Wembanyama',cat:'dpoy',opts:['Rudy Gobert','Jaren Jackson Jr.','Bam Adebayo','Victor Wembanyama']},
+  // coach
+  {q:'Quel entraîneur a le plus de titres NBA (11) ?',a:'Phil Jackson',cat:'coach',opts:['Gregg Popovich','Pat Riley','Larry Bird','Phil Jackson']},
+  {q:'Quel entraîneur a mené les Warriors à 4 titres entre 2015 et 2022 ?',a:'Steve Kerr',cat:'coach',opts:['Mark Jackson','Alvin Gentry','Luke Walton','Steve Kerr']},
+  {q:'Quel entraîneur a mené les Bucks au titre 2021 ?',a:'Mike Budenholzer',cat:'coach',opts:['Jason Kidd','Terry Stotts','Nate McMillan','Mike Budenholzer']},
+  {q:'Quel entraîneur a mené les Raptors au titre 2019 ?',a:'Nick Nurse',cat:'coach',opts:['Dwane Casey','Larry Drew','Lloyd Pierce','Nick Nurse']},
+  {q:'Quel entraîneur a le plus de victoires en NBA ?',a:'Don Nelson',cat:'coach',opts:['Gregg Popovich','Phil Jackson','Lenny Wilkens','Don Nelson']},
+  // surnom
+  {q:'Quel est le surnom de LeBron James ?',a:'The King',cat:'surnom',opts:['The Chosen One','Black Mamba','The Answer','The King']},
+  {q:'Quel est le surnom de Kobe Bryant ?',a:'Black Mamba',cat:'surnom',opts:['The King','The Answer','Black Mamba','The Mailman']},
+  {q:'Quel est le surnom de Kevin Durant ?',a:'Slim Reaper',cat:'surnom',opts:['KD','The Servant','Slim Reaper','The Beard']},
+  {q:'Quel est le surnom de James Harden ?',a:'The Beard',cat:'surnom',opts:['The Chef','Slim Reaper','The Beard','The Process']},
+  {q:'Quel est le surnom de Joel Embiid ?',a:'The Process',cat:'surnom',opts:['The Big Fundamental','The Beard','The Process','The King']},
+  {q:'Quel est le surnom de Giannis Antetokounmpo ?',a:'Greek Freak',cat:'surnom',opts:['The Big Fundamental','Greek Freak','The Answer','The Chosen One']},
+  {q:'Quel est le surnom de Stephen Curry ?',a:'Chef Curry',cat:'surnom',opts:['Chef Curry','Slim Reaper','The Process','Baby-Faced Assassin']},
+  {q:'Quel est le surnom de Tim Duncan ?',a:'The Big Fundamental',cat:'surnom',opts:['The Mailman','The Big Fundamental','The Answer','Spiderman']},
+  {q:'Quel est le surnom de Allen Iverson ?',a:'The Answer',cat:'surnom',opts:['AI','The King','The Answer','The Truth']},
+  {q:'Quel est le surnom de Paul Pierce ?',a:'The Truth',cat:'surnom',opts:['The Answer','The Truth','The Process','Black Mamba']},
+  {q:'Quel est le surnom de Victor Wembanyama ?',a:'Wemby',cat:'surnom',opts:['The Alien','Spiderman','Wemby','The Giant']},
+  // pays
+  {q:'De quel pays vient Giannis Antetokounmpo ?',a:'Grèce',cat:'pays',opts:['Nigeria','Cameroun','Grèce','Sénégal']},
+  {q:'De quel pays vient Luka Dončić ?',a:'Slovénie',cat:'pays',opts:['Croatie','Serbie','Slovénie','Bosnie']},
+  {q:'De quel pays vient Nikola Jokić ?',a:'Serbie',cat:'pays',opts:['Croatie','Slovénie','Bosnie','Serbie']},
+  {q:'De quel pays vient Victor Wembanyama ?',a:'France',cat:'pays',opts:['Belgique','Espagne','Suisse','France']},
+  {q:'De quel pays vient Rudy Gobert ?',a:'France',cat:'pays',opts:['Espagne','Belgique','France','Suisse']},
+  {q:'De quel pays vient Joel Embiid ?',a:'Cameroun',cat:'pays',opts:['Nigeria','Sénégal','Côte d\'Ivoire','Cameroun']},
+  {q:'De quel pays vient Dirk Nowitzki ?',a:'Allemagne',cat:'pays',opts:['Autriche','Pays-Bas','Suisse','Allemagne']},
+  {q:'De quel pays vient Pau Gasol ?',a:'Espagne',cat:'pays',opts:['Argentine','Brésil','France','Espagne']},
+  {q:'De quel pays vient Tony Parker ?',a:'France',cat:'pays',opts:['Belgique','Suisse','Canada','France']},
+  {q:'De quel pays vient Steve Nash ?',a:'Canada',cat:'pays',opts:['Australie','Afrique du Sud','États-Unis','Canada']},
+  {q:'De quel pays vient Manu Ginobili ?',a:'Argentine',cat:'pays',opts:['Brésil','Uruguay','Chili','Argentine']},
+  // finales
+  {q:'Quelle équipe a perdu les Finales 2023 face aux Nuggets ?',a:'Miami Heat',cat:'finales',opts:['Boston Celtics','Golden State Warriors','Los Angeles Lakers','Miami Heat']},
+  {q:'Quelle équipe a perdu les Finales 2024 face aux Celtics ?',a:'Dallas Mavericks',cat:'finales',opts:['Indiana Pacers','Minnesota Timberwolves','Golden State Warriors','Dallas Mavericks']},
+  {q:'Quelle équipe a perdu les Finales 2022 face aux Warriors ?',a:'Boston Celtics',cat:'finales',opts:['Miami Heat','Dallas Mavericks','Memphis Grizzlies','Boston Celtics']},
+  {q:'Quelle équipe a perdu les Finales 2021 face aux Bucks ?',a:'Phoenix Suns',cat:'finales',opts:['LA Clippers','Denver Nuggets','Atlanta Hawks','Phoenix Suns']},
+  {q:'Quelle équipe a perdu les Finales 2016 face aux Cavaliers ?',a:'Golden State Warriors',cat:'finales',opts:['Oklahoma City Thunder','San Antonio Spurs','Toronto Raptors','Golden State Warriors']},
+  // slam_dunk
+  {q:'Qui a remporté le Dunk Contest 2023 ?',a:'Mac McClung',cat:'slam_dunk',opts:['Jericho Sims','Trey Murphy III','KJ Martin','Mac McClung']},
+  {q:'Qui a remporté le Dunk Contest 2024 ?',a:'Mac McClung',cat:'slam_dunk',opts:['Jaylen Brown','Jacob Toppin','Obi Toppin','Mac McClung']},
+  {q:'Qui a remporté le Dunk Contest 2016 ?',a:'Zach LaVine',cat:'slam_dunk',opts:['Aaron Gordon','Andre Drummond','Will Barton','Zach LaVine']},
+  {q:'Qui a remporté le Dunk Contest 2017 ?',a:'Glenn Robinson III',cat:'slam_dunk',opts:['Aaron Gordon','Derrick Jones Jr.','Larry Nance Jr.','Glenn Robinson III']},
+  {q:'Qui est considéré comme le plus grand dunker de l\'histoire ?',a:'Vince Carter',cat:'slam_dunk',opts:['Michael Jordan','Dominique Wilkins','Julius Erving','Vince Carter']},
+  // coach_year
+  {q:'Qui a remporté le Coach de l\'Année 2024 ?',a:'Mark Daigneault',cat:'coach_year',opts:['Joe Mazzulla','Monty Williams','Billy Donovan','Mark Daigneault']},
+  {q:'Qui a remporté le Coach de l\'Année 2023 ?',a:'Mike Brown',cat:'coach_year',opts:['Monty Williams','Gregg Popovich','Doc Rivers','Mike Brown']},
+  {q:'Qui a remporté le Coach de l\'Année 2022 ?',a:'Monty Williams',cat:'coach_year',opts:['Steve Kerr','Taylor Jenkins','Quin Snyder','Monty Williams']},
+  {q:'Qui a remporté le Coach de l\'Année 2021 ?',a:'Tom Thibodeau',cat:'coach_year',opts:['Nate McMillan','Quin Snyder','Tyronn Lue','Tom Thibodeau']},
+  {q:'Qui a remporté le Coach de l\'Année 2025 ?',a:'Joe Mazzulla',cat:'coach_year',opts:['Mark Daigneault','Rick Carlisle','Ime Udoka','Joe Mazzulla']},
+  // arena
+  {q:'Dans quelle salle jouent les Atlanta Hawks ?',a:'State Farm Arena',cat:'arena',opts:['State Farm Arena','Philips Arena','Gainbridge Fieldhouse','Spectrum Center']},
+  {q:'Dans quelle salle jouent les Boston Celtics ?',a:'TD Garden',cat:'arena',opts:['Barclays Center','United Center','TD Garden','Fiserv Forum']},
+  {q:'Dans quelle salle jouent les Brooklyn Nets ?',a:'Barclays Center',cat:'arena',opts:['Madison Square Garden','TD Garden','Barclays Center','Wells Fargo Center']},
+  {q:'Dans quelle salle jouent les Charlotte Hornets ?',a:'Spectrum Center',cat:'arena',opts:['TD Garden','Spectrum Center','Kaseya Center','Gainbridge Fieldhouse']},
+  {q:'Dans quelle salle jouent les Chicago Bulls ?',a:'United Center',cat:'arena',opts:['Gainbridge Fieldhouse','Fiserv Forum','United Center','Little Caesars Arena']},
+  {q:'Dans quelle salle jouent les Cleveland Cavaliers ?',a:'Rocket Mortgage FieldHouse',cat:'arena',opts:['Gainbridge Fieldhouse','Little Caesars Arena','Target Center','Rocket Mortgage FieldHouse']},
+  {q:'Dans quelle salle jouent les Dallas Mavericks ?',a:'American Airlines Center',cat:'arena',opts:['Toyota Center','Footprint Center','Paycom Center','American Airlines Center']},
+  {q:'Dans quelle salle jouent les Denver Nuggets ?',a:'Ball Arena',cat:'arena',opts:['Vivint Arena','Moda Center','Ball Arena','Golden 1 Center']},
+  {q:'Dans quelle salle jouent les Detroit Pistons ?',a:'Little Caesars Arena',cat:'arena',opts:['United Center','Rocket Mortgage FieldHouse','Gainbridge Fieldhouse','Little Caesars Arena']},
+  {q:'Dans quelle salle jouent les Golden State Warriors ?',a:'Chase Center',cat:'arena',opts:['Crypto.com Arena','Intuit Dome','Chase Center','Ball Arena']},
+  {q:'Dans quelle salle jouent les Houston Rockets ?',a:'Toyota Center',cat:'arena',opts:['FedExForum','American Airlines Center','Smoothie King Center','Toyota Center']},
+  {q:'Dans quelle salle jouent les Indiana Pacers ?',a:'Gainbridge Fieldhouse',cat:'arena',opts:['Bankers Life Fieldhouse','Fiserv Forum','Rocket Mortgage FieldHouse','Gainbridge Fieldhouse']},
+  {q:'Dans quelle salle jouent les LA Clippers ?',a:'Intuit Dome',cat:'arena',opts:['Crypto.com Arena','Chase Center','Staples Center','Intuit Dome']},
+  {q:'Dans quelle salle jouent les Los Angeles Lakers ?',a:'Crypto.com Arena',cat:'arena',opts:['Chase Center','Intuit Dome','Ball Arena','Crypto.com Arena']},
+  {q:'Dans quelle salle jouent les Memphis Grizzlies ?',a:'FedExForum',cat:'arena',opts:['Smoothie King Center','Toyota Center','Kaseya Center','FedExForum']},
+  {q:'Dans quelle salle jouent les Miami Heat ?',a:'Kaseya Center',cat:'arena',opts:['AmericanAirlines Arena','Spectrum Center','FedExForum','Kaseya Center']},
+  {q:'Dans quelle salle jouent les Milwaukee Bucks ?',a:'Fiserv Forum',cat:'arena',opts:['United Center','Gainbridge Fieldhouse','Target Center','Fiserv Forum']},
+  {q:'Dans quelle salle jouent les Minnesota Timberwolves ?',a:'Target Center',cat:'arena',opts:['Fiserv Forum','Paycom Center','Ball Arena','Target Center']},
+  {q:'Dans quelle salle jouent les New Orleans Pelicans ?',a:'Smoothie King Center',cat:'arena',opts:['FedExForum','Toyota Center','Kaseya Center','Smoothie King Center']},
+  {q:'Dans quelle salle jouent les New York Knicks ?',a:'Madison Square Garden',cat:'arena',opts:['Barclays Center','Wells Fargo Center','TD Garden','Madison Square Garden']},
+  {q:'Dans quelle salle jouent les Oklahoma City Thunder ?',a:'Paycom Center',cat:'arena',opts:['American Airlines Center','Toyota Center','AT&T Center','Paycom Center']},
+  {q:'Dans quelle salle jouent les Orlando Magic ?',a:'Kia Center',cat:'arena',opts:['Spectrum Center','State Farm Arena','Amway Center','Kia Center']},
+  {q:'Dans quelle salle jouent les Philadelphia 76ers ?',a:'Wells Fargo Center',cat:'arena',opts:['Barclays Center','Madison Square Garden','TD Garden','Wells Fargo Center']},
+  {q:'Dans quelle salle jouent les Phoenix Suns ?',a:'Footprint Center',cat:'arena',opts:['Toyota Center','American Airlines Center','Ball Arena','Footprint Center']},
+  {q:'Dans quelle salle jouent les Portland Trail Blazers ?',a:'Moda Center',cat:'arena',opts:['Chase Center','Golden 1 Center','Ball Arena','Moda Center']},
+  {q:'Dans quelle salle jouent les Sacramento Kings ?',a:'Golden 1 Center',cat:'arena',opts:['Ball Arena','Chase Center','Moda Center','Golden 1 Center']},
+  {q:'Dans quelle salle jouent les San Antonio Spurs ?',a:'AT&T Center',cat:'arena',opts:['Toyota Center','American Airlines Center','Smoothie King Center','AT&T Center']},
+  {q:'Dans quelle salle jouent les Toronto Raptors ?',a:'Scotiabank Arena',cat:'arena',opts:['Bell Centre','Rogers Centre','Air Canada Centre','Scotiabank Arena']},
+  {q:'Dans quelle salle jouent les Utah Jazz ?',a:'Delta Center',cat:'arena',opts:['Vivint Arena','Ball Arena','Moda Center','Delta Center']},
+  {q:'Dans quelle salle jouent les Washington Wizards ?',a:'Capital One Arena',cat:'arena',opts:['Wells Fargo Center','TD Garden','Barclays Center','Capital One Arena']},
+];
+
+const CAT_LABEL={champion:'🏆 Champion',mvp:'🌟 MVP',finals_mvp:'🏅 MVP Finals',draft:'🎓 Draft',scoring:'📊 Scoreur',record:'📖 Record',roty:'🌱 Rookie',dpoy:'🛡️ Défenseur',coach:'👨‍💼 Coach',surnom:'🎭 Surnom',pays:'🌍 International',finales:'🥈 Finaliste',slam_dunk:'💥 Dunk Contest',coach_year:'📋 Coach of Year',arena:'🏟️ Arène'};
+
+function MiniGameCulture({firebaseUser,profile,setProfile}){
+  const today=getMiniGameDate();
+  const playKey='minigame_culture_'+today;
+  const [phase,setPhase]=useState('loading');
+  const [questions,setQuestions]=useState([]);
+  const [idx,setIdx]=useState(0);
+  const [selected,setSelected]=useState(null);
+  const [score,setScore]=useState(0);
+  const [todayResult,setTodayResult]=useState(null);
+  const PTS_Q=10;
+  const NB_Q=10;
+
+  useEffect(()=>{
+    const existing=profile?.[playKey];
+    if(existing?.completed){setTodayResult(existing);setPhase('result');return;}
+    const shuffled=[...NBA_CULTURE_DB].sort(()=>Math.random()-.5).slice(0,NB_Q);
+    setQuestions(shuffled);
+    setPhase('play');
+  },[]);
+
+  async function handleAnswer(opt){
+    if(selected!==null)return;
+    setSelected(opt);
+    const ok=opt===questions[idx].a;
+    const newScore=score+(ok?PTS_Q:0);
+    setTimeout(async()=>{
+      if(idx+1>=NB_Q){
+        const result={completed:true,score:newScore,date:today,pointsAdded:false};
+        setTodayResult(result);
+        if(firebaseUser){
+          try{
+            const weekKey=getWeekKey(),monthKey=getMonthKey();
+            const userRef=doc(db,'users',firebaseUser.uid);
+            const userSnap=await getDoc(userRef);
+            const userData=userSnap.exists()?userSnap.data():{};
+            const newPoints=(userData.points||0)+newScore;
+            const weekPts={...(userData.weekPts||{})};weekPts[weekKey]=(weekPts[weekKey]||0)+newScore;
+            const monthPts={...(userData.monthPts||{})};monthPts[monthKey]=(monthPts[monthKey]||0)+newScore;
+            const updated={...result,pointsAdded:true};
+            await updateDoc(userRef,{[playKey]:updated,points:newPoints,weekPts,monthPts});
+            if(setProfile)setProfile(p=>({...p,[playKey]:updated,points:newPoints,weekPts,monthPts}));
+          }catch(e){}
+        }
+        setPhase('result');
+      }else{
+        setIdx(i=>i+1);setSelected(null);setScore(newScore);
+      }
+    },900);
+  }
+
+  if(phase==='loading')return<div style={{textAlign:'center',padding:40,color:'var(--muted)'}}>⏳ Chargement…</div>;
+
+  if(phase==='result'){
+    const s=todayResult?.score||0;
+    const pct=Math.round((s/(NB_Q*PTS_Q))*100);
+    const medal=pct>=90?'🏆':pct>=70?'🥇':pct>=50?'🥈':pct>=30?'🥉':'💪';
+    return(
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:22,fontWeight:800,color:'var(--gold)',letterSpacing:1}}>🧠 CULTURE NBA</div>
+          <div style={{fontSize:13,color:'var(--muted)',marginTop:2}}>Résultat du jour</div>
+        </div>
+        <div style={{background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:16,padding:20,textAlign:'center'}}>
+          <div style={{fontSize:56,marginBottom:8}}>{medal}</div>
+          <div style={{fontSize:48,fontWeight:900,color:'var(--gold)',lineHeight:1}}>{s}</div>
+          <div style={{fontSize:14,color:'var(--muted)',marginBottom:16}}>/ {NB_Q*PTS_Q} pts</div>
+          <div style={{background:'var(--s2)',borderRadius:8,height:10,overflow:'hidden'}}>
+            <div style={{height:'100%',width:pct+'%',background:'linear-gradient(90deg,var(--gold),var(--gold2))',borderRadius:8,transition:'width .6s ease'}}/>
+          </div>
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:8}}>{pct}% du score maximum</div>
+        </div>
+        <div style={{background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:16,padding:16,textAlign:'center'}}>
+          <div style={{fontSize:13,color:'var(--muted)'}}>Revenez demain pour un nouveau quiz !</div>
+        </div>
+      </div>
+    );
+  }
+
+  const q=questions[idx];
+  if(!q)return null;
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{textAlign:'center',marginBottom:4}}>
+        <div style={{fontSize:22,fontWeight:800,color:'var(--gold)',letterSpacing:1}}>🧠 CULTURE NBA</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>{CAT_LABEL[q.cat]||q.cat}</div>
+      </div>
+      <div style={{background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:16,padding:'10px 14px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:12,color:'var(--muted)',fontWeight:700}}>Question {idx+1}/{NB_Q}</span>
+          <span style={{fontSize:13,fontWeight:800,color:'var(--gold)'}}>{score} pts</span>
+        </div>
+        <div style={{background:'var(--s2)',borderRadius:4,height:5,marginTop:8,overflow:'hidden'}}>
+          <div style={{height:'100%',width:((idx)/NB_Q*100)+'%',background:'var(--gold)',borderRadius:4,transition:'width .3s'}}/>
+        </div>
+      </div>
+      <div style={{background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:16,padding:'20px 16px',fontSize:16,fontWeight:700,color:'var(--txt)',lineHeight:1.4,textAlign:'center',minHeight:80,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        {q.q}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+        {q.opts.map(opt=>{
+          const isSelected=selected===opt;
+          const isCorrect=opt===q.a;
+          let bg='var(--s1)',border='1.5px solid var(--bdr)',color='var(--txt)';
+          if(selected!==null){
+            if(isCorrect){bg='color-mix(in srgb,var(--green) 15%,var(--s1))';border='1.5px solid var(--green)';color='var(--green)';}
+            else if(isSelected){bg='color-mix(in srgb,var(--red) 15%,var(--s1))';border='1.5px solid var(--red)';color='var(--red)';}
+          }
+          return(
+            <button key={opt} onClick={()=>handleAnswer(opt)} disabled={selected!==null} style={{padding:'14px 16px',background:bg,border,borderRadius:12,color,fontSize:14,fontWeight:600,cursor:selected!==null?'default':'pointer',textAlign:'left',transition:'all .2s',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span>{opt}</span>
+              {selected!==null&&isCorrect&&<span>✅</span>}
+              {selected!==null&&isSelected&&!isCorrect&&<span>❌</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Trades de l'été ─── */
+const TRADES_PLAYERS=[
+  {id:'tp01',name:'Derrick White',team:'Boston Celtics'},
+  {id:'tp02',name:'Karl-Anthony Towns',team:'New York Knicks'},
+  {id:'tp03',name:'Mikal Bridges',team:'New York Knicks'},
+  {id:'tp04',name:'Jordan Clarkson',team:'New York Knicks'},
+  {id:'tp05',name:'Evan Mobley',team:'Cleveland Cavaliers'},
+  {id:'tp06',name:'Dennis Schröder',team:'Cleveland Cavaliers'},
+  {id:'tp07',name:'Jarrett Allen',team:'Cleveland Cavaliers'},
+  {id:'tp08',name:'Brandon Ingram',team:'Toronto Raptors'},
+  {id:'tp09',name:'Jakob Poeltl',team:'Toronto Raptors'},
+  {id:'tp10',name:'Zaccharie Risacher',team:'Atlanta Hawks'},
+  {id:'tp11',name:'Paul George',team:'Philadelphia 76ers'},
+  {id:'tp12',name:'Joel Embiid',team:'Philadelphia 76ers'},
+  {id:'tp13',name:'Jalen Suggs',team:'Orlando Magic'},
+  {id:'tp14',name:'LaMelo Ball',team:'Charlotte Hornets'},
+  {id:'tp15',name:'Tyler Herro',team:'Miami Heat'},
+  {id:'tp16',name:'Jaime Jaquez Jr.',team:'Miami Heat'},
+  {id:'tp17',name:'Andrew Wiggins',team:'Miami Heat'},
+  {id:'tp18',name:'Giannis Antetokounmpo',team:'Milwaukee Bucks'},
+  {id:'tp19',name:'Kyle Kuzma',team:'Milwaukee Bucks'},
+  {id:'tp20',name:'Patrick Williams',team:'Chicago Bulls'},
+  {id:'tp21',name:'Nic Claxton',team:'Brooklyn Nets'},
+  {id:'tp22',name:'Michael Porter Jr.',team:'Brooklyn Nets'},
+  {id:'tp23',name:'Andrew Nembhard',team:'Indiana Pacers'},
+  {id:'tp24',name:"D'Angelo Russell",team:'Dallas Mavericks'},
+  {id:'tp25',name:'Christian Braun',team:'Denver Nuggets'},
+  {id:'tp26',name:'Cameron Johnson',team:'Denver Nuggets'},
+  {id:'tp27',name:'Jamal Murray',team:'Denver Nuggets'},
+  {id:'tp28',name:'Julius Randle',team:'Minnesota Timberwolves'},
+  {id:'tp29',name:'Isaiah Hartenstein',team:'Oklahoma City Thunder'},
+  {id:'tp30',name:'Luguentz Dort',team:'Oklahoma City Thunder'},
+  {id:'tp31',name:'Jerami Grant',team:'Portland Trail Blazers'},
+  {id:'tp32',name:'Shaedon Sharpe',team:'Portland Trail Blazers'},
+  {id:'tp33',name:'Lauri Markkanen',team:'Utah Jazz'},
+  {id:'tp34',name:'Draymond Green',team:'Golden State Warriors'},
+  {id:'tp35',name:'Kristaps Porzingis',team:'Golden State Warriors'},
+  {id:'tp36',name:'Kawhi Leonard',team:'Los Angeles Clippers'},
+  {id:'tp37',name:'Austin Reaves',team:'Los Angeles Lakers'},
+  {id:'tp38',name:'Jalen Green',team:'Phoenix Suns'},
+  {id:'tp39',name:'DeMar DeRozan',team:'Sacramento Kings'},
+  {id:'tp40',name:'Zach LaVine',team:'Sacramento Kings'},
+  {id:'tp41',name:'Malik Monk',team:'Sacramento Kings'},
+  {id:'tp42',name:'Domantas Sabonis',team:'Sacramento Kings'},
+  {id:'tp43',name:'Daniel Gafford',team:'Dallas Mavericks'},
+  {id:'tp44',name:'Dereck Lively II',team:'Dallas Mavericks'},
+  {id:'tp45',name:'Kevin Durant',team:'Houston Rockets'},
+  {id:'tp46',name:'Ja Morant',team:'Memphis Grizzlies'},
+  {id:'tp47',name:'Herbert Jones',team:'New Orleans Pelicans'},
+  {id:'tp48',name:'Trey Murphy III',team:'New Orleans Pelicans'},
+  {id:'tp49',name:'Zion Williamson',team:'New Orleans Pelicans'},
+  {id:'tp50',name:"De'Aaron Fox",team:'San Antonio Spurs'},
+];
+const NBA_TEAMS_LIST=['Atlanta Hawks','Boston Celtics','Brooklyn Nets','Charlotte Hornets','Chicago Bulls','Cleveland Cavaliers','Dallas Mavericks','Denver Nuggets','Detroit Pistons','Golden State Warriors','Houston Rockets','Indiana Pacers','Los Angeles Clippers','Los Angeles Lakers','Memphis Grizzlies','Miami Heat','Milwaukee Bucks','Minnesota Timberwolves','New Orleans Pelicans','New York Knicks','Oklahoma City Thunder','Orlando Magic','Philadelphia 76ers','Phoenix Suns','Portland Trail Blazers','Sacramento Kings','San Antonio Spurs','Toronto Raptors','Utah Jazz','Washington Wizards'];
+
+function normTradeName(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');}
+
+function MiniGameTrades({firebaseUser,profile,setProfile}){
+  const isDev=process.env.NODE_ENV==='development';
+  const now=new Date();
+  const canPredict=isDev||(now>=new Date('2025-05-15')&&now<new Date('2025-06-15'));
+  const canSeeResults=isDev||(now>=new Date('2025-09-01'));
+  const [overlay,setOverlay]=useState(null);
+  const [saving,setSaving]=useState(false);
+  const [confirmMsg,setConfirmMsg]=useState(null);
+  const [adminData,setAdminData]=useState(null);
+  const [scores,setScores]=useState(null);
+  const overlayRef=useRef(null);
+
+  useEffect(()=>{if(overlay&&overlayRef.current)overlayRef.current.scrollTop=0;},[overlay?.player?.id,overlay?.step]);
+
+  const locked=profile?.tradesGame2025?.locked||{};
+  const predictions=profile?.tradesGame2025?.predictions||{};
+
+  useEffect(()=>{
+    if(!canSeeResults||!firebaseUser)return;
+    (async()=>{
+      try{
+        const snap=await getDoc(doc(db,'tradesAdmin','2025'));
+        if(snap.exists())setAdminData(snap.data());
+      }catch(e){}
+    })();
+  },[canSeeResults,firebaseUser]);
+
+  function openPlayer(player){
+    if(locked[player.id])return;
+    if(!canPredict)return;
+    setOverlay({player,step:1,stayed:null,franchise:null,returnPlayers:[]});
+    setConfirmMsg(null);
+  }
+
+  function closeOverlay(){setOverlay(null);}
+
+  async function confirmPrediction(){
+    if(!firebaseUser||!overlay)return;
+    setSaving(true);
+    const{player,stayed,franchise,returnPlayers}=overlay;
+    const pred={stayed,franchise:stayed?null:franchise,returnPlayers:stayed?[]:returnPlayers,ts:Date.now()};
+    const newPredictions={...predictions,[player.id]:pred};
+    const newLocked={...locked,[player.id]:true};
+    const update={'tradesGame2025.predictions':newPredictions,'tradesGame2025.locked':newLocked};
+    try{
+      await updateDoc(doc(db,'users',firebaseUser.uid),update);
+      if(setProfile)setProfile(p=>({...p,tradesGame2025:{...p.tradesGame2025,predictions:newPredictions,locked:newLocked}}));
+      setConfirmMsg('✅ Pronostic enregistré !');
+      setTimeout(()=>{setOverlay(null);setConfirmMsg(null);},1200);
+    }catch(e){setConfirmMsg('❌ Erreur, réessayez.');}
+    setSaving(false);
+  }
+
+  return(
+    <div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12,lineHeight:1.5,padding:'10px 14px',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12}}>
+        {canPredict&&<span>🟢 Pronostics ouverts · Cliquez sur un joueur pour parier</span>}
+        {!canPredict&&!canSeeResults&&<span>🔒 Pronostics fermés · Résultats le 1er septembre</span>}
+        {canSeeResults&&<span>📊 Résultats disponibles</span>}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+        {TRADES_PLAYERS.map(player=>{
+          const isLocked=!!locked[player.id];
+          const pred=predictions[player.id];
+          return(
+            <button key={player.id} onClick={()=>openPlayer(player)} disabled={isLocked||!canPredict} style={{padding:'10px 12px',background:'var(--s1)',border:`1.5px solid ${isLocked?'var(--gold)':'var(--bdr)'}`,borderRadius:12,cursor:isLocked||!canPredict?'default':'pointer',textAlign:'left',opacity:!canPredict&&!isLocked?.5:1,transition:'border-color .2s'}}>
+              <div style={{fontSize:13,fontWeight:700,color:'var(--txt)',marginBottom:2,lineHeight:1.3}}>{player.name}</div>
+              <div style={{fontSize:10,color:'var(--muted)',marginBottom:isLocked?4:0}}>{player.team}</div>
+              {isLocked&&pred&&(
+                <div style={{fontSize:10,color:'var(--gold)',fontWeight:700,marginTop:2}}>
+                  {pred.stayed?'✅ Reste':'🔄 Part'}
+                  {!pred.stayed&&pred.franchise&&<span> → {pred.franchise.split(' ').slice(-1)[0]}</span>}
+                  {isLocked&&<span style={{marginLeft:4}}>🔒</span>}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {overlay&&createPortal(
+        <div ref={overlayRef} style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:9999,overflowY:'auto',animation:'slideUp .3s ease'}}>
+          <div style={{maxWidth:480,margin:'0 auto',padding:'20px 16px',paddingBottom:'max(32px,env(safe-area-inset-bottom))'}}>
+            <button onClick={closeOverlay} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',padding:'0 0 20px',letterSpacing:.3}}>
+              ← Retour
+            </button>
+            <div style={{fontSize:20,fontWeight:800,color:'var(--txt)',marginBottom:4}}>{overlay.player.name}</div>
+            <div style={{fontSize:13,color:'var(--muted)',marginBottom:20}}>{overlay.player.team}</div>
+
+            {confirmMsg&&<div style={{padding:'12px 16px',background:'var(--s1)',border:'1px solid var(--gold)',borderRadius:12,color:'var(--gold)',fontWeight:700,textAlign:'center',marginBottom:16}}>{confirmMsg}</div>}
+
+            {overlay.step===1&&(
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:'var(--txt)',marginBottom:16}}>Ce joueur va-t-il rester dans sa franchise cet été ?</div>
+                <div style={{display:'flex',gap:10}}>
+                  <button onClick={()=>setOverlay(o=>({...o,stayed:true,step:3}))} style={{flex:1,padding:'16px',background:'color-mix(in srgb,var(--green) 10%,var(--s1))',border:'1.5px solid var(--green)',borderRadius:14,color:'var(--green)',fontSize:16,fontWeight:800,cursor:'pointer'}}>✅ Reste</button>
+                  <button onClick={()=>setOverlay(o=>({...o,stayed:false,step:2}))} style={{flex:1,padding:'16px',background:'color-mix(in srgb,var(--red) 10%,var(--s1))',border:'1.5px solid var(--red)',borderRadius:14,color:'var(--red)',fontSize:16,fontWeight:800,cursor:'pointer'}}>🔄 Part</button>
+                </div>
+              </div>
+            )}
+
+            {overlay.step===2&&(
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:'var(--txt)',marginBottom:4}}>Dans quelle franchise ?</div>
+                <div style={{fontSize:12,color:'var(--muted)',marginBottom:14}}>Choisissez la destination</div>
+                <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:'50vh',overflowY:'auto'}}>
+                  {NBA_TEAMS_LIST.filter(t=>t!==overlay.player.team).map(team=>(
+                    <button key={team} onClick={()=>setOverlay(o=>({...o,franchise:team,step:3,returnPlayers:[]}))} style={{padding:'12px 16px',background:overlay.franchise===team?'color-mix(in srgb,var(--gold) 15%,var(--s1))':'var(--s1)',border:`1.5px solid ${overlay.franchise===team?'var(--gold)':'var(--bdr)'}`,borderRadius:12,color:overlay.franchise===team?'var(--gold)':'var(--txt)',fontSize:14,fontWeight:600,cursor:'pointer',textAlign:'left'}}>
+                      {team}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {overlay.step===3&&(
+              <div>
+                <div style={{marginBottom:16,padding:'12px 16px',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12}}>
+                  <div style={{fontSize:13,color:'var(--muted)',marginBottom:4}}>Votre pronostic :</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--txt)'}}>{overlay.stayed?'✅ Reste dans '+overlay.player.team:'🔄 Part vers '+overlay.franchise}</div>
+                </div>
+                {!overlay.stayed&&(
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:14,fontWeight:700,color:'var(--txt)',marginBottom:4}}>Joueurs en retour (optionnel)</div>
+                    <div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>Qui revient dans l'échange ?</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:6,maxHeight:'35vh',overflowY:'auto'}}>
+                      {TRADES_PLAYERS.filter(p=>p.id!==overlay.player.id).map(p=>{
+                        const sel=(overlay.returnPlayers||[]).includes(p.id);
+                        return(
+                          <button key={p.id} onClick={()=>setOverlay(o=>{
+                            const rp=o.returnPlayers||[];
+                            return{...o,returnPlayers:sel?rp.filter(x=>x!==p.id):[...rp,p.id]};
+                          })} style={{padding:'10px 12px',background:sel?'color-mix(in srgb,var(--gold) 12%,var(--s1))':'var(--s1)',border:`1.5px solid ${sel?'var(--gold)':'var(--bdr)'}`,borderRadius:10,color:sel?'var(--gold)':'var(--txt)',fontSize:13,fontWeight:600,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                            <span>{p.name} <span style={{color:'var(--muted)',fontWeight:400}}>({p.team})</span></span>
+                            {sel&&<span>✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <button onClick={confirmPrediction} disabled={saving} style={{width:'100%',padding:'16px',background:'linear-gradient(135deg,var(--gold),var(--gold2))',border:'none',borderRadius:14,color:'#000',fontSize:15,fontWeight:800,cursor:saving?'default':'pointer',marginTop:8}}>
+                  {saving?'Enregistrement…':'🔒 CONFIRMER ET VERROUILLER'}
+                </button>
+                <div style={{fontSize:11,color:'var(--muted)',textAlign:'center',marginTop:8}}>Ce choix est définitif et ne pourra pas être modifié</div>
+                {overlay.step===3&&overlay.stayed===false&&(
+                  <button onClick={()=>setOverlay(o=>({...o,step:2}))} style={{width:'100%',padding:'12px',background:'none',border:'1px solid var(--bdr)',borderRadius:12,color:'var(--muted)',fontSize:13,cursor:'pointer',marginTop:8}}>
+                    ← Changer de franchise
+                  </button>
+                )}
+                <button onClick={()=>setOverlay(o=>({...o,step:1,stayed:null,franchise:null,returnPlayers:[]}))} style={{width:'100%',padding:'12px',background:'none',border:'1px solid var(--bdr)',borderRadius:12,color:'var(--muted)',fontSize:13,cursor:'pointer',marginTop:6}}>
+                  ← Recommencer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ,document.body)}
+    </div>
+  );
+}
+
+function AdminTradesPanel({onClose}){
+  const ADMIN_PWD='NBgAmes07310!';
+  const [pwd,setPwd]=useState('');
+  const [auth2,setAuth2]=useState(false);
+  const [tab,setTab]=useState('answers');
+  const [answers,setAnswers]=useState({});
+  const [leaderboard,setLeaderboard]=useState([]);
+  const [saving,setSaving]=useState(false);
+  const [msg,setMsg]=useState('');
+
+  function checkPwd(){if(pwd===ADMIN_PWD)setAuth2(true);else setMsg('Mot de passe incorrect');}
+
+  useEffect(()=>{
+    if(!auth2)return;
+    (async()=>{
+      try{
+        const snap=await getDoc(doc(db,'tradesAdmin','2025'));
+        if(snap.exists())setAnswers(snap.data()?.answers||{});
+      }catch(e){}
+    })();
+    (async()=>{
+      try{
+        const snap=await getDocs(collection(db,'tradesLeaderboard2025'));
+        const rows=[];
+        snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+        rows.sort((a,b)=>(b.score||0)-(a.score||0));
+        setLeaderboard(rows);
+      }catch(e){}
+    })();
+  },[auth2]);
+
+  async function saveAnswers(){
+    setSaving(true);setMsg('');
+    try{
+      await setDoc(doc(db,'tradesAdmin','2025'),{answers,updatedAt:Date.now()},{merge:true});
+      setMsg('✅ Sauvegardé !');
+    }catch(e){setMsg('❌ Erreur');}
+    setSaving(false);
+  }
+
+  return createPortal(
+    <div style={{position:'fixed',inset:0,background:'var(--bg)',zIndex:9999,overflowY:'auto'}}>
+      <div style={{maxWidth:480,margin:'0 auto',padding:'20px 16px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+          <div style={{fontSize:18,fontWeight:800,color:'var(--gold)'}}>⚙️ Admin Trades</div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:'var(--muted)',fontSize:22,cursor:'pointer'}}>✕</button>
+        </div>
+        {!auth2?(
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <input type="password" placeholder="Mot de passe admin" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==='Enter'&&checkPwd()} style={{padding:'14px 16px',background:'var(--s1)',border:'1.5px solid var(--bdr)',borderRadius:12,color:'var(--txt)',fontSize:15,outline:'none'}}/>
+            <button onClick={checkPwd} style={{padding:'14px',background:'linear-gradient(135deg,var(--gold),var(--gold2))',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:15,cursor:'pointer'}}>Accéder</button>
+            {msg&&<div style={{color:'var(--red)',fontSize:13,textAlign:'center'}}>{msg}</div>}
+          </div>
+        ):(
+          <div>
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {['answers','leaderboard'].map(t=>(
+                <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'10px',background:tab===t?'var(--gold)':'var(--s1)',border:'none',borderRadius:10,color:tab===t?'#000':'var(--muted)',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+                  {t==='answers'?'Réponses':'Classement'}
+                </button>
+              ))}
+            </div>
+            {tab==='answers'&&(
+              <div>
+                <div style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>Pour chaque joueur, entrez : reste / part + franchise si part</div>
+                <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
+                  {TRADES_PLAYERS.map(p=>{
+                    const a=answers[p.id]||{};
+                    return(
+                      <div key={p.id} style={{background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,padding:'12px'}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'var(--txt)',marginBottom:8}}>{p.name} <span style={{color:'var(--muted)',fontWeight:400}}>({p.team})</span></div>
+                        <div style={{display:'flex',gap:8,marginBottom:a.stayed===false?8:0}}>
+                          <button onClick={()=>setAnswers(ans=>({...ans,[p.id]:{...ans[p.id],stayed:true,franchise:null}}))} style={{flex:1,padding:'8px',background:a.stayed===true?'color-mix(in srgb,var(--green) 20%,var(--s1))':'var(--s2)',border:`1px solid ${a.stayed===true?'var(--green)':'var(--bdr)'}`,borderRadius:8,color:a.stayed===true?'var(--green)':'var(--muted)',fontSize:12,fontWeight:700,cursor:'pointer'}}>✅ Reste</button>
+                          <button onClick={()=>setAnswers(ans=>({...ans,[p.id]:{...ans[p.id],stayed:false}}))} style={{flex:1,padding:'8px',background:a.stayed===false?'color-mix(in srgb,var(--red) 20%,var(--s1))':'var(--s2)',border:`1px solid ${a.stayed===false?'var(--red)':'var(--bdr)'}`,borderRadius:8,color:a.stayed===false?'var(--red)':'var(--muted)',fontSize:12,fontWeight:700,cursor:'pointer'}}>🔄 Part</button>
+                        </div>
+                        {a.stayed===false&&(
+                          <select value={a.franchise||''} onChange={e=>setAnswers(ans=>({...ans,[p.id]:{...ans[p.id],franchise:e.target.value}}))} style={{width:'100%',padding:'8px',background:'var(--s2)',border:'1px solid var(--bdr)',borderRadius:8,color:'var(--txt)',fontSize:12}}>
+                            <option value=''>-- Destination --</option>
+                            {NBA_TEAMS_LIST.map(t=><option key={t} value={t}>{t}</option>)}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={saveAnswers} disabled={saving} style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,var(--gold),var(--gold2))',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:15,cursor:saving?'default':'pointer'}}>
+                  {saving?'Sauvegarde…':'💾 Sauvegarder'}
+                </button>
+                {msg&&<div style={{marginTop:8,textAlign:'center',fontSize:13,color:msg.startsWith('✅')?'var(--green)':'var(--red)'}}>{msg}</div>}
+              </div>
+            )}
+            {tab==='leaderboard'&&(
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {leaderboard.length===0&&<div style={{textAlign:'center',color:'var(--muted)',padding:20}}>Aucun résultat</div>}
+                {leaderboard.map((row,i)=>(
+                  <div key={row.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,padding:'12px 16px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <span style={{fontSize:18,width:28}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:'var(--txt)'}}>{row.username||row.id}</div>
+                        <div style={{fontSize:11,color:'var(--muted)'}}>{row.correct||0} / {TRADES_PLAYERS.length} corrects</div>
+                      </div>
+                    </div>
+                    <div style={{fontSize:16,fontWeight:800,color:'var(--gold)'}}>{row.score||0} pts</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  ,document.body);
+}
+
 const css=`
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -1344,6 +1954,7 @@ export default function NBGames() {
   const [selectedUserBet,setSelectedUserBet]=useState(null);
   const [showHistory,setShowHistory]=useState(false);
   const [miniGamePage,setMiniGamePage]=useState(null);
+  const [showAdminTrades,setShowAdminTrades]=useState(false);
   // Theme & lang
   const [lang,setLang]=useState("fr");
   const [darkMode,setDarkMode]=useState(true);
@@ -2111,13 +2722,32 @@ export default function NBGames() {
                 </button>
                 <MiniGameChampion firebaseUser={firebaseUser} profile={profile} setProfile={setProfile}/>
               </div>
+            ):miniGamePage==="culture"?(
+              <div>
+                <button onClick={()=>setMiniGamePage(null)} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',padding:'0 0 16px',letterSpacing:.3}}>
+                  ← Mini-jeux
+                </button>
+                <MiniGameCulture firebaseUser={firebaseUser} profile={profile} setProfile={setProfile}/>
+              </div>
+            ):miniGamePage==="trades"?(
+              <div>
+                <button onClick={()=>setMiniGamePage(null)} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',padding:'0 0 16px',letterSpacing:.3}}>
+                  ← Mini-jeux
+                </button>
+                <MiniGameTrades firebaseUser={firebaseUser} profile={profile} setProfile={setProfile}/>
+              </div>
             ):(
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
                 <div style={{fontSize:12,color:'var(--muted)',fontWeight:700,letterSpacing:1.5,textTransform:'uppercase',marginBottom:4}}>Mini-jeux</div>
                 {[
                   {id:'champion',ico:'🏆',title:'Trouve le Champion',desc:'Retrouve le champion NBA de chaque année · 6 questions · 1 fois par jour',pts:'36 pts max',color:'var(--gold)'},
-                ].map(g=>(
-                  <button key={g.id} onClick={()=>setMiniGamePage(g.id)} style={{display:'flex',alignItems:'center',gap:14,padding:'16px',background:'var(--s1)',border:'1.5px solid var(--bdr)',borderRadius:16,cursor:'pointer',textAlign:'left',width:'100%',transition:'border-color .2s'}}>
+                  {id:'culture',ico:'🧠',title:'Culture NBA',desc:'Quiz culture générale NBA · 10 questions · 1 fois par jour',pts:'100 pts max',color:'var(--blue)'},
+                  {id:'trades',ico:'🔄',title:"Trades de l'été",desc:"Pronostique les trades de l'été 2025 · 50 joueurs · Résultats en septembre",pts:'Classement',color:'var(--orange)'},
+                ].map(g=>{
+                  const isTradesLocked=g.id==='trades'&&!Object.keys(profile?.tradesGame2025?.locked||{}).length&&(process.env.NODE_ENV==='development'||(new Date()>=new Date('2025-05-15')&&new Date()<new Date('2025-06-15')));
+                  return(
+                  <button key={g.id} onClick={()=>setMiniGamePage(g.id)} style={{display:'flex',alignItems:'center',gap:14,padding:'16px',background:'var(--s1)',border:'1.5px solid var(--bdr)',borderRadius:16,cursor:'pointer',textAlign:'left',width:'100%',transition:'border-color .2s',position:'relative'}}>
+                    {isTradesLocked&&<div style={{position:'absolute',top:-6,right:-6,width:12,height:12,background:'var(--red)',borderRadius:'50%',border:'2px solid var(--bg)'}}/>}
                     <div style={{fontSize:32,lineHeight:1,flexShrink:0}}>{g.ico}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:15,fontWeight:800,color:'var(--txt)',marginBottom:3}}>{g.title}</div>
@@ -2128,7 +2758,7 @@ export default function NBGames() {
                       <div style={{fontSize:18,color:'var(--muted)',marginTop:2}}>›</div>
                     </div>
                   </button>
-                ))}
+                );})}
               </div>
             )}
           </div>
@@ -2385,10 +3015,13 @@ export default function NBGames() {
               </a>
             </div>
 
+            <button onClick={()=>setShowAdminTrades(true)} style={{width:'100%',padding:'12px',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',marginBottom:8}}>⚙️ Admin Trades</button>
             <button className="logoutbtn" onClick={doLogout}>{t.logout}</button>
           </div>
         )}
       </div>
+
+      {showAdminTrades&&<AdminTradesPanel onClose={()=>setShowAdminTrades(false)}/>}
 
       <div className={"bnav "+(franchiseMode?"franchise":"")}>
         {TABS.map(tb=><button key={tb.id} className={"bntab "+(tab===tb.id?"on":"")} onClick={()=>setTab(tb.id)}><span className="bntab-ico">{tb.ico}</span><span className="bntab-lbl">{tb.lbl}</span></button>)}
