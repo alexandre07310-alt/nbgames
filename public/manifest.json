@@ -1,0 +1,46 @@
+{
+  "id": "/",
+  "short_name": "NBgAmes",
+  "name": "NBgAmes - Pronostics NBA",
+  "description": "Pronostique chaque soir le match NBA tiré au sort, défie tes amis sur les mini-jeux et grimpe dans le classement.",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["sports", "games", "entertainment"],
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#07090E",
+  "background_color": "#0F1825"
+}

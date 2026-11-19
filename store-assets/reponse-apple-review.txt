@@ -1,0 +1,139 @@
+═══════════════════════════════════════════════════════════════
+ RÉPONSE À APPLE — à coller dans "Reply" ET dans le champ
+ "Notes" de la section App Review Information
+═══════════════════════════════════════════════════════════════
+
+
+Thank you for your review. Please find the requested information below.
+
+
+──────────────────────────────────────────────
+2. APP PURPOSE AND TARGET AUDIENCE
+──────────────────────────────────────────────
+
+NBgAmes is a free NBA prediction game for basketball fans.
+
+Problem it solves: casual NBA fans want a light, daily way to engage with the
+league and compete with friends, without the complexity of fantasy leagues or
+the risks of gambling apps.
+
+How it works: every night the app automatically selects one NBA game at random,
+together with one randomly chosen statistic (points, assists, rebounds, blocks
+or steals). Users answer three questions before tip-off: which team wins
+(10 points), which player will lead that statistic (20 points), and the exact
+number they will record (30 points). All three correct doubles the score.
+Results are fetched automatically after the game and points are credited.
+
+Two secondary mini-games are included: a daily NBA trivia quiz (10 questions
+drawn from a database of 650+), and a summer transfer prediction game.
+
+Target audience: NBA fans aged 13 and over, primarily French-speaking.
+
+IMPORTANT: NBgAmes is NOT a gambling app. There are no wagers, no real-money
+prizes, no in-app purchases and no advertising. Points have no monetary value
+and exist solely for the leaderboard.
+
+
+──────────────────────────────────────────────
+3. SETUP AND ACCESS INSTRUCTIONS
+──────────────────────────────────────────────
+
+An account is required. Demo credentials are provided in the
+App Review Information section:
+
+    Email:    [À COMPLÉTER — crée un compte de démo dédié]
+    Password: [À COMPLÉTER]
+
+Steps to review the main features:
+
+1. Launch the app and sign in with the demo credentials above
+   (or tap "Inscription" to create a new account, or use Sign in with Apple).
+2. MATCH tab — the game of the night, the countdown until predictions close,
+   and the three prediction questions. Predictions close one hour before
+   tip-off; if predictions are closed at review time, the previous night's
+   result is shown instead.
+3. MINI-JEUX tab — "Culture NBA" is playable at any time: tap any answer to
+   see scoring and haptic feedback.
+4. CLASSEMENT tab — global, last game, week, month, and archived seasons.
+5. PROFIL tab — edit profile, share, and ACCOUNT DELETION at the bottom
+   of the screen ("Supprimer mon compte"). Deletion requires typing the word
+   SUPPRIMER to confirm, then permanently removes the account, the profile
+   photo, all predictions and all scores.
+
+Note on timing: the daily game is drawn from the real NBA schedule. Outside the
+NBA season, or between games, the MATCH tab shows a countdown rather than an
+open prediction form. The mini-games remain fully playable at all times.
+
+
+──────────────────────────────────────────────
+4. EXTERNAL SERVICES USED
+──────────────────────────────────────────────
+
+- Firebase Authentication (Google LLC) — account creation and sign-in
+  (email/password and Sign in with Apple).
+- Cloud Firestore (Google LLC) — storage of user profiles, predictions,
+  scores and leaderboards.
+- Firebase Storage (Google LLC) — optional profile photos.
+- Firebase Hosting (Google LLC) — hosting of the privacy policy, support
+  and account-deletion pages.
+- ESPN public sports API — NBA schedules, live scores and box-score
+  statistics. Read-only. No user data is ever sent to this service.
+
+No advertising SDK, no analytics SDK, no payment processor, no AI service.
+
+
+──────────────────────────────────────────────
+5. REGIONAL DIFFERENCES
+──────────────────────────────────────────────
+
+The app functions identically in all regions. There are no region-locked
+features, no region-specific content and no geographic restrictions.
+
+The interface is available in French and English; the language follows the
+user's preference and can be changed in the app.
+
+All users worldwide see the same NBA games, the same questions and the same
+global leaderboard.
+
+
+──────────────────────────────────────────────
+6. THIRD-PARTY MATERIAL
+──────────────────────────────────────────────
+
+NBgAmes is an independent fan application. It is not affiliated with,
+endorsed by, or sponsored by the NBA or any of its franchises. This is
+stated explicitly in the App Store description, in the app's support page
+and in its privacy policy.
+
+The app displays factual sports information only — game schedules, final
+scores, player names and publicly published statistics — retrieved from
+ESPN's public API. Factual sports results are not subject to copyright.
+
+Team names and team logos are referenced for identification purposes only,
+to indicate which teams are playing. They are not used as branding for the
+app, do not appear in the app icon or App Store assets, and are not
+presented in a way that suggests any official association.
+
+The app is free, carries no advertising and generates no revenue.
+
+NBgAmes does not operate in a regulated industry. It is not a gambling
+application: there are no stakes, no wagers, no real-money prizes and no
+in-app purchases. Points have no monetary value and cannot be exchanged
+for anything.
+
+
+──────────────────────────────────────────────
+1. SCREEN RECORDING
+──────────────────────────────────────────────
+
+A screen recording captured on an iPhone 13 Pro running the latest iOS is
+attached / available at: [À COMPLÉTER — lien ou pièce jointe]
+
+The recording shows, in order: app launch, account registration, sign-in,
+the daily prediction flow, the Culture NBA mini-game, the leaderboard,
+and the full account deletion flow.
+
+The app contains no user-generated content beyond a username and an optional
+profile photo, which are visible only in the leaderboard. There is no chat,
+no comments, no messaging and no way for users to publish content to others.
+There is no paid content and no in-app purchase.
