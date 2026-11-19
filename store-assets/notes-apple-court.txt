@@ -1,0 +1,62 @@
+Thank you for your review. Requested information below.
+
+1. SCREEN RECORDING
+Recorded on iPhone 13 Pro, latest iOS: [LIEN VIDEO]
+Shows in order: launch, account registration, sign-in, daily prediction flow,
+trivia mini-game, leaderboard, and full account deletion.
+No user-generated content beyond a username and optional profile photo, visible
+only in the leaderboard. No chat, comments or messaging. No paid content, no
+in-app purchase.
+
+2. PURPOSE AND AUDIENCE
+NBgAmes is a free NBA prediction game. Each night the app randomly selects one
+NBA game plus one random statistic (points, assists, rebounds, blocks, steals).
+Users answer three questions before tip-off: winning team (10 pts), player who
+will lead that stat (20 pts), exact number (30 pts). All three correct doubles
+the score. Results are fetched automatically after the game.
+Also included: a daily NBA trivia quiz (650+ questions) and a summer transfer
+prediction game.
+Audience: NBA fans aged 13+, primarily French-speaking.
+NOT a gambling app: no wagers, no real-money prizes, no in-app purchases, no
+advertising. Points have no monetary value.
+
+3. SETUP AND ACCESS
+An account is required. Demo credentials:
+  Email: [EMAIL DEMO]
+  Password: [MOT DE PASSE]
+- MATCH tab: game of the night, countdown, three prediction questions.
+  Predictions close 1h before tip-off; otherwise the previous result is shown.
+- MINI-JEUX tab: "Culture NBA" playable at any time.
+- CLASSEMENT tab: global, last game, week, month, archived seasons.
+- PROFIL tab: edit profile, share, and account deletion at the bottom
+  ("Supprimer mon compte"), with two-step confirmation. It permanently removes
+  the account, photo, predictions and scores.
+The daily game follows the real NBA schedule; between games the MATCH tab shows
+a countdown. Mini-games remain playable at all times.
+
+4. EXTERNAL SERVICES
+- Firebase Authentication (Google LLC): email and password sign-in
+- Cloud Firestore (Google LLC): profiles, predictions, scores, leaderboards
+- Firebase Storage (Google LLC): optional profile photos
+- Firebase Hosting (Google LLC): privacy, support and deletion pages
+- ESPN public API: NBA schedules, scores, statistics. Read-only; no user data
+  is ever sent to it.
+No advertising SDK, no analytics SDK, no payment processor, no AI service.
+
+5. REGIONAL DIFFERENCES
+None. The app works identically worldwide, with no region-locked features or
+content. Interface available in French and English. All users see the same
+games, questions and global leaderboard.
+
+6. THIRD-PARTY MATERIAL
+NBgAmes is an independent fan app, not affiliated with, endorsed by or
+sponsored by the NBA or any franchise. This is stated in the App Store
+description, the support page and the privacy policy.
+It displays factual sports information only (schedules, scores, player names,
+published statistics) from ESPN's public API. Team names and logos are used for
+identification only, to show which teams are playing; they are not app branding
+and do not appear in the app icon or store assets.
+The app is free, carries no advertising and generates no revenue.
+Not a regulated industry, not a gambling app: no stakes, no wagers, no
+real-money prizes, no in-app purchases. Points have no monetary value and
+cannot be exchanged for anything.

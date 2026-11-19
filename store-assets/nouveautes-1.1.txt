@@ -1,0 +1,9 @@
+=== Nouveautés de cette version (App Store 1.1 / Play Store 1.2.0) ===
+
+Nouveau mini-jeu Parcours : reconnais 3 joueurs par jour grâce à leurs franchises et à leurs années. Cash, Carré ou Duo : à toi de choisir ton niveau de risque.
+
+Culture NBA : nouveau barème en série. Chaque bonne réponse d'affilée vaut un point de plus que la précédente.
+
+Notifications corrigées : l'interrupteur du profil fonctionne, et un rappel quotidien t'annonce le match du soir à 9h.
+
+Connexion avec Apple disponible sur iPhone.

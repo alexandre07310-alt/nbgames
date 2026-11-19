@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône des notifications (rappel de pari) : silhouette blanche d'un ballon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2A10,10 0,1 0,22 12,10 10,0 0,0 12,2ZM19.93,11H17.05A13.4,13.4 0,0 0,15.36 5.04,8 8,0 0,1 19.93,11ZM13,4.07A11.4,11.4 0,0 1,15.05 11H13ZM11,4.07V11H8.95A11.4,11.4 0,0 1,11 4.07ZM8.64,5.04A13.4,13.4 0,0 0,6.95 11H4.07A8,8 0,0 1,8.64 5.04ZM4.07,13H6.95A13.4,13.4 0,0 0,8.64 18.96,8 8,0 0,1 4.07,13ZM11,19.93A11.4,11.4 0,0 1,8.95 13H11ZM13,19.93V13H15.05A11.4,11.4 0,0 1,13 19.93ZM15.36,18.96A13.4,13.4 0,0 0,17.05 13H19.93A8,8 0,0 1,15.36 18.96Z" />
+</vector>

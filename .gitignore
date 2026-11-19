@@ -24,3 +24,24 @@ yarn-error.log*
 .env
 .firebase/
 .claude/
+
+# Android TWA (Play Store)
+android-twa/node_modules/
+android-twa/build/
+android-twa/app/build/
+android-twa/.gradle/
+android-twa/local.properties
+# Clé de signature : ne doit JAMAIS être versionnée
+android-twa/*.keystore
+android-twa/*.jks
+android-twa/keystore.properties
+# Clé d'upload Android (jamais dans git)
+android-keys/
+# Clés de signature et certificats : jamais dans git (dépôt public)
+*.jks
+*.keystore
+*.pem
+# Ancien projet Android (TWA), remplacé par android/ (Capacitor)
+android-twa/
+# Photos personnelles déposées à la racine
+/IMG_*.jpg

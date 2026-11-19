@@ -1,0 +1,54 @@
+diff --git a/node_modules/@capacitor-community/apple-sign-in/Package.swift b/node_modules/@capacitor-community/apple-sign-in/Package.swift
+index 94246df..7d9d007 100644
+--- a/node_modules/@capacitor-community/apple-sign-in/Package.swift
++++ b/node_modules/@capacitor-community/apple-sign-in/Package.swift
+@@ -10,7 +10,7 @@ let package = Package(
+             targets: ["SignInWithApple"])
+     ],
+     dependencies: [
+-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "7.0.0")
++        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "8.0.0")
+     ],
+     targets: [
+         .target(
+diff --git a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
+index f53087c..873baff 100755
+--- a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
++++ b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
+@@ -1,4 +1,5 @@
+ import Foundation
++import UIKit
+ import Capacitor
+ import AuthenticationServices
+ 
+@@ -24,6 +25,9 @@ public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+ 
+         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+         authorizationController.delegate = self
++        // CORRECTIF : sans ancrage, iOS doit deviner la fenetre de presentation.
++        // Cela passe sur iPhone mais echoue sur iPad (rejet App Store 2.1a).
++        authorizationController.presentationContextProvider = self
+         authorizationController.performRequests()
+     }
+ 
+@@ -83,3 +87,20 @@ extension SignInWithApple: ASAuthorizationControllerDelegate {
+         self.bridge?.releaseCall(call)
+     }
+ }
++
++// MARK: - Ancrage de presentation (correctif iPad)
++
++extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
++    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
++        if let window = self.bridge?.viewController?.view.window {
++            return window
++        }
++        let scene = UIApplication.shared.connectedScenes
++            .compactMap { $0 as? UIWindowScene }
++            .first { $0.activationState == .foregroundActive }
++        if let window = scene?.windows.first(where: { $0.isKeyWindow }) ?? scene?.windows.first {
++            return window
++        }
++        return ASPresentationAnchor()
++    }
++}

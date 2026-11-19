@@ -1,0 +1,18 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nbgames.app",
+      "sha256_cert_fingerprints": [
+        "CD:76:88:3E:8F:F4:47:98:CD:AD:31:CF:96:68:97:6C:04:71:A2:47:BD:14:2E:9C:A7:C4:F1:48:57:CE:69:84",
+        "69:9F:B3:63:38:0E:7B:A2:97:44:43:3C:52:D5:8B:1F:59:E7:68:AC:D3:1B:72:AA:F1:24:B8:EE:27:6F:AA:86",
+        "18:38:77:14:05:C9:4B:56:37:C0:1D:F6:E8:05:87:84:22:30:16:32:2D:C5:24:58:64:38:17:E5:34:C9:03:7A",
+        "C2:DB:BF:22:FB:6E:C3:54:6C:59:46:5F:1E:53:B0:E0:D0:E7:A1:F4:EE:82:A2:5B:F9:F7:11:32:BD:C0:D3:18",
+        "3B:B2:63:C9:1F:91:9C:43:E6:3B:10:AA:D5:F7:06:9F:0E:32:F9:DC:57:C2:D3:93:B1:C3:E4:42:0C:9E:91:DC"
+      ]
+    }
+  }
+]

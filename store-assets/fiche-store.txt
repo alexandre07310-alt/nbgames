@@ -1,0 +1,183 @@
+╔═══════════════════════════════════════════════════════════╗
+║  NBgAmes — TOUT CE QU'IL FAUT SAISIR DANS LA PLAY CONSOLE ║
+╚═══════════════════════════════════════════════════════════╝
+
+Package : com.nbgames.app
+AAB     : android/app/build/outputs/bundle/release/app-release.aab (android/build-release.sh)
+
+
+┌───────────────────────────────────────────────────────────┐
+│ 1. FICHE PLAY STORE PRINCIPALE                            │
+│    Développer la présence → Fiche Play Store principale   │
+└───────────────────────────────────────────────────────────┘
+
+▸ NOM DE L'APPLICATION  (30 car. max)
+
+NBgAmes
+
+
+▸ DESCRIPTION COURTE  (80 car. max — 73 utilisés)
+
+Pronostique le match NBA du soir, défie tes amis et grimpe au classement.
+
+
+▸ DESCRIPTION COMPLÈTE  (4000 car. max — 2029 utilisés)
+  ⬇ tout ce qui suit, jusqu'à la ligne de tirets ⬇
+
+Chaque soir, un match NBA est tiré au sort. À toi de le lire mieux que les autres.
+
+NBgAmes est un jeu de pronostics NBA gratuit, sans publicité et sans argent réel.
+Un match par jour, trois questions, un classement. Rien de plus, rien de moins.
+
+
+🏀 LE PRONOSTIC DU SOIR
+
+Chaque nuit, l'application tire au sort un match parmi ceux de la soirée NBA, et
+avec lui une statistique au hasard : points, passes, rebonds, contres ou
+interceptions. Tu as jusqu'à une heure avant le début du match pour répondre.
+
+• Quelle équipe l'emporte ? +10 points
+• Qui dominera la statistique du jour ? +20 points
+• Combien en réalisera-t-il exactement ? +30 points
+
+Les trois bonnes réponses ? Ton total est doublé. 120 points sur la table chaque soir.
+
+Les résultats sont récupérés automatiquement après le match et les points crédités
+sans que tu aies à faire quoi que ce soit.
+
+
+🎮 LES MINI-JEUX
+
+Culture NBA — Un quiz quotidien de 10 questions piochées dans plus de 650 :
+champions, MVP, drafts, surnoms, transferts, salles, records, nationalités.
+Les bonnes réponses en série valent de plus en plus : 1 point, puis 2, puis 3…
+Une erreur et la mise retombe à 1. Jusqu'à 55 points par jour.
+
+Parcours — 3 joueurs par jour à reconnaître grâce à leurs franchises et à leurs
+années. Cash (tu écris le nom) : 5 points. Carré (4 choix) : 3 points. Duo (2 choix) : 1 point.
+
+Trades de l'été — Sur 50 joueurs, devine qui reste, qui part, et dans quelle
+franchise. Les résultats tombent à la fin du marché des transferts.
+
+
+🏆 LES CLASSEMENTS
+
+Global, dernier match, semaine, mois. Et les archives des saisons terminées,
+pour que les anciens classements ne disparaissent jamais.
+
+Une flamme suit ta régularité : elle grandit à chaque pronostic posé et repart
+à zéro dès que tu sautes un match.
+
+
+⚙️ AUSSI DANS L'APP
+
+• Thème aux couleurs de ta franchise préférée
+• Mode clair et mode sombre
+• Français et anglais
+• Historique détaillé de tous tes pronostics
+• Tendances de la communauté sur chaque match
+• Mode invité : découvre l'app sans créer de compte
+• Rappel quotidien du match à 9h et alerte avant la clôture des paris
+
+
+Gratuit. Sans publicité. Sans achat intégré. Sans mise ni gain en argent réel.
+
+
+NBgAmes est une application indépendante, non affiliée à la NBA ni à aucune de
+ses franchises. Les noms et logos d'équipes appartiennent à leurs propriétaires
+respectifs.
+
+  ⬆ fin de la description complète ⬆
+───────────────────────────────────────────────────────────
+
+
+▸ VISUELS
+
+Icône 512×512 ......... store-assets/play-icon-512.png
+Bannière 1024×500 ..... store-assets/feature-graphic-1024x500.png
+Captures (1170×2000) .. store-assets/screenshots/ (01 à 07)
+
+
+┌───────────────────────────────────────────────────────────┐
+│ 2. PARAMÈTRES DU STORE                                    │
+└───────────────────────────────────────────────────────────┘
+
+Type ................... Jeu
+Catégorie .............. Sport
+Tags ................... Basket · Sport · Quiz
+E-mail de contact ...... (adresse de contact du compte développeur)
+Site web ............... https://nbgames-ea27a.web.app
+
+
+┌───────────────────────────────────────────────────────────┐
+│ 3. CONTENU DE L'APPLICATION — les questionnaires          │
+│    Règles et programmes → Contenu de l'application        │
+└───────────────────────────────────────────────────────────┘
+
+▸ POLITIQUE DE CONFIDENTIALITÉ
+
+https://nbgames-ea27a.web.app/privacy.html
+
+
+▸ ACCÈS À L'APPLICATION
+
+L'app nécessite un compte. Fournis des identifiants de test à Google,
+sinon les contrôleurs ne pourront pas la tester et elle sera refusée.
+→ Choisir « Tout ou partie des fonctionnalités sont limitées »
+→ Donner un e-mail + mot de passe d'un compte de test valide
+
+
+▸ PUBLICITÉS
+
+L'application contient-elle des publicités ? → NON
+
+
+▸ SÉCURITÉ DES DONNÉES
+
+Collecte de données ................. OUI
+Chiffrement en transit .............. OUI (HTTPS)
+Suppression sur demande possible .... OUI (par e-mail, cf. politique)
+
+Données collectées :
+  • Adresse e-mail ......... Collectée · Requise · Gestion du compte
+  • Nom d'utilisateur ...... Collecté · Requis · Gestion du compte,
+                             fonctionnalités de l'app (classement public)
+  • Photos (facultatif) .... Collectée · Facultative · Fonctionnalités de l'app
+  • Actions dans l'app ..... Collectées · Requises · Fonctionnalités de l'app
+                             (pronostics, points, historique)
+
+Pour CHAQUE donnée : partagée avec des tiers → NON
+Aucune donnée n'est vendue ni utilisée à des fins publicitaires.
+
+
+▸ CLASSIFICATION DU CONTENU
+
+⚠️ POINT SENSIBLE — une app de pronostics se fait facilement classer à tort
+   en jeu d'argent. Réponds NON à toutes les questions portant sur :
+   jeux d'argent, paris, casino, loterie, achat de monnaie virtuelle.
+   NBgAmes n'a ni mise, ni gain réel, ni achat intégré : les points
+   n'ont aucune valeur monétaire.
+
+Catégorie ......................... Jeu
+Violence / sexe / grossièretés .... NON à tout
+Substances ........................ NON
+Jeux d'argent et hasard ........... NON
+Interaction entre utilisateurs .... OUI (classement affichant les pseudos)
+Partage de position ............... NON
+Partage d'informations perso ...... NON
+
+
+▸ PUBLIC CIBLE
+
+Tranche d'âge ...................... 13 ans et plus
+  (cohérent avec la politique de confidentialité)
+L'app attire-t-elle les enfants ? ... NON
+
+
+┌───────────────────────────────────────────────────────────┐
+│ 4. MISES À JOUR                                           │
+└───────────────────────────────────────────────────────────┘
+
+L'app Android est native (Capacitor) : chaque mise à jour demande un nouvel AAB.
+Incrémenter versionCode / versionName dans android/app/build.gradle, puis :
+    android/build-release.sh   (mot de passe lu dans le trousseau du Mac)
