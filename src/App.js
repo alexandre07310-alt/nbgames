@@ -329,6 +329,9 @@ function computePronosticScore(pronostics,match,t){
   return{breakdown,total,allPerfect};
 }
 
+/* Crédite tous les joueurs pour un match terminé. Fait normalement par la Cloud
+   Function scorePronostics ; depuis l'app, seul le compte admin peut le lancer
+   (secours), les règles Firestore le refusant aux autres comptes. */
 async function autoCalculateAllUsers(match,t){
   try{
     // Récupère les données complètes (summary API) pour une détection précise des égalités
@@ -389,11 +392,21 @@ async function scoreUserPronostic(uid,match,t){
    crédite tout le monde. Limité aux matchs récents, pour ne pas reverser des
    points d'une saison déjà clôturée. */
 const CATCHUP_MAX_AGE_MS=4*24*3600*1000;
-async function catchUpUnscoredPronostics(t){
-  const usersSnap=await getDocs(collection(db,"users"));
+/* onlyUid : ne rattraper que ce joueur (cas normal). null : tous les joueurs,
+   réservé au compte admin — les règles Firestore refusent aux autres comptes
+   de modifier un profil qui n'est pas le leur. Le rattrapage de tous les
+   joueurs est surtout fait côté serveur (Cloud Function scorePronostics). */
+async function catchUpUnscoredPronostics(t,onlyUid){
+  let docs;
+  if(onlyUid){
+    const s=await getDoc(doc(db,"users",onlyUid));
+    docs=s.exists()?[s]:[];
+  }else{
+    docs=(await getDocs(collection(db,"users"))).docs;
+  }
   const pending={}; // matchId → [uid]
   const now=Date.now();
-  usersSnap.forEach(d=>{
+  docs.forEach(d=>{
     const u=d.data();
     for(const k of Object.keys(u)){
       if(!k.startsWith("pronostic_"))continue;
@@ -466,118 +479,6 @@ function stripUndefined(obj){
   if(obj&&typeof obj==="object"){const r={};for(const k of Object.keys(obj)){if(obj[k]!==undefined)r[k]=stripUndefined(obj[k]);}return r;}
   return obj;
 }
-async function recalculateAllPastMatches(t,onProgress){
-  try{
-    const usersSnap=await getDocs(collection(db,"users"));
-    // Collect all unique match IDs from all users' scored pronostics
-    const matchIds=new Set();
-    for(const userDoc of usersSnap.docs){
-      const data=userDoc.data();
-      Object.keys(data).filter(k=>k.startsWith("pronostic_")&&data[k]?.scoring&&data[k]?.done).forEach(k=>matchIds.add(k.replace("pronostic_","")));
-    }
-    // Fetch match results (summary API, plus précise) pour chaque match
-    const matchCache={};
-    let mi=0;
-    for(const matchId of matchIds){
-      mi++;if(onProgress)onProgress(`Récupération match ${mi}/${matchIds.size}…`);
-      if(!matchId||matchId.startsWith("f"))continue;
-      try{
-        const result=await fetchMatchResult(matchId);
-        if(result){
-          matchCache[matchId]={
-            topScorer:result.topScorer||null,
-            topScorerPts:result.topScorerPts||0,
-            topScorers:(result.topScorers||[result.topScorer]).filter(Boolean),
-            statLeaders:result.statLeaders||null,
-          };
-        }
-      }catch(e){}
-    }
-    // Re-score all users
-    let totalCorrected=0;
-    const allUpdates=[];
-    for(const userDoc of usersSnap.docs){
-      const userData=userDoc.data();
-      const pronKeys=Object.keys(userData).filter(k=>k.startsWith("pronostic_")&&userData[k]?.scoring&&userData[k]?.done);
-      if(!pronKeys.length)continue;
-      let ptsDelta=0;
-      const weekPtsNew={...(userData.weekPts||{})};
-      const monthPtsNew={...(userData.monthPts||{})};
-      const docUpdates={};
-      let lastMatchPtsNew=typeof userData.lastMatchPts==="number"?userData.lastMatchPts:0;
-      let lastMatchIdNew=userData.lastMatchId||null;
-      let lastMatchTipoff=null;
-      for(const key of pronKeys){
-        const pron=userData[key];
-        if(!pron?.scoring)continue;
-        const matchId=key.replace("pronostic_","");
-        const matchResult=matchCache[matchId];
-        if(!matchResult)continue;
-        // Détecter le match le plus récent par tipoff
-        const tipoffVal=pron.tipoff||null;
-        if(tipoffVal&&(!lastMatchTipoff||tipoffVal>lastMatchTipoff)){
-          lastMatchTipoff=tipoffVal;lastMatchIdNew=matchId;
-        }
-        // Reconstruit le match depuis le breakdown stocké
-        const bd=pron.scoring.breakdown||[];
-        const isNewFormat=pron.statKey!==undefined;
-        let homeScore,awayScore,fallbackScorerPts=0;
-        if(isNewFormat){
-          // Nouveau format : bd[0].real = équipe gagnante
-          const realWinnerTeam=bd[0]?.real||'';
-          homeScore=(pron.home===realWinnerTeam)?1:0;
-          awayScore=(pron.away===realWinnerTeam)?1:0;
-        }else{
-          const realScore=(bd[1]?.real||"0-0").split("-");
-          homeScore=parseInt(realScore[0])||0;
-          awayScore=parseInt(realScore[1])||0;
-          fallbackScorerPts=parseInt(bd[3]?.real)||0;
-        }
-        const matchObj={
-          id:matchId,
-          home:pron.home||"",
-          away:pron.away||"",
-          homeScore,awayScore,
-          topScorer:matchResult.topScorer,
-          topScorerPts:matchResult.topScorerPts||fallbackScorerPts,
-          topScorers:matchResult.topScorers,
-          statLeaders:matchResult.statLeaders||null,
-        };
-        const oldTotal=pron.scoring.total||0;
-        const newSr=computePronosticScore(pron,matchObj,t);
-        const delta=newSr.total-oldTotal;
-        // Mise à jour si les points changent OU si le real du scoreur a changé (égalité)
-        const oldScorerReal=(pron.scoring.breakdown?.[2]?.real)||"";
-        const newScorerReal=newSr.breakdown?.[2]?.real||"";
-        const scorerChanged=oldScorerReal!==newScorerReal;
-        if(delta===0&&!scorerChanged)continue;
-        const tipoff=pron.tipoff||null;
-        const wKey=tipoff?getWeekKeyForDate(tipoff):getWeekKey();
-        const mKey=tipoff?getMonthKeyForDate(tipoff):getMonthKey();
-        if(delta!==0){
-          ptsDelta+=delta;
-          weekPtsNew[wKey]=(weekPtsNew[wKey]||0)+delta;
-          monthPtsNew[mKey]=(monthPtsNew[mKey]||0)+delta;
-          if(matchId===lastMatchIdNew)lastMatchPtsNew=Math.max(0,lastMatchPtsNew+delta);
-        }
-        docUpdates[key]=stripUndefined({...pron,scoring:newSr});
-        totalCorrected++;
-      }
-      // Toujours écrire lastMatchId si on a pu le déterminer (même sans changement de score)
-      const hasChanges=Object.keys(docUpdates).length>0;
-      const needsIdUpdate=lastMatchIdNew&&lastMatchIdNew!==userData.lastMatchId;
-      if(hasChanges||needsIdUpdate){
-        const newPts=hasChanges?Math.max(0,(userData.points||0)+ptsDelta):(userData.points||0);
-        const payload=stripUndefined({...docUpdates,points:newPts,weekPts:weekPtsNew,monthPts:monthPtsNew,lastMatchPts:lastMatchPtsNew,lastMatchId:lastMatchIdNew});
-        allUpdates.push(updateDoc(doc(db,"users",userDoc.id),payload));
-      }
-    }
-    if(onProgress)onProgress(`Mise à jour de ${allUpdates.length} joueur(s)…`);
-    await Promise.all(allUpdates);
-    return{ok:true,corrected:totalCorrected};
-  }catch(e){console.error(e);return{ok:false,error:e.message};}
-}
-
 async function checkUsernameAvailable(username,currentUserId=null){const snap=await getDoc(doc(db,"usernames",username.toLowerCase()));if(!snap.exists())return true;return snap.data().uid===currentUserId;}
 async function reserveUsername(username,uid){await setDoc(doc(db,"usernames",username.toLowerCase()),{uid,username});}
 async function releaseUsername(username){try{await deleteDoc(doc(db,"usernames",username.toLowerCase()));}catch(e){}}
@@ -1915,7 +1816,9 @@ function computeTradesScore(predictions,locked,answers){
 /* Calcule et crédite les points Trades de TOUS les utilisateurs.
    Idempotent : seul l'écart avec `tradesGame2025.pointsAdded` est appliqué,
    donc un second passage ne double jamais les points et une correction admin
-   ajuste à la baisse comme à la hausse. */
+   ajuste à la baisse comme à la hausse.
+   Lancé uniquement depuis le panneau admin : les règles Firestore n'autorisent
+   que le compte admin à modifier le profil des autres joueurs. */
 async function creditAllTradesUsers(answers){
   const answeredCount=Object.keys(answers||{}).filter(k=>answers[k]?.stayed!==undefined&&answers[k]?.stayed!==null).length;
   const isClosed=answeredCount>=TRADES_PLAYERS.length;
@@ -1951,29 +1854,6 @@ async function creditAllTradesUsers(answers){
   await Promise.all(writes);
   rows.sort((a,b)=>(b.score||0)-(a.score||0));
   return{rows,isClosed,answeredCount};
-}
-
-/* Verrou transactionnel : garantit qu'un seul client effectue le calcul global
-   pour une version donnée des résultats admin, même si plusieurs joueurs
-   ouvrent l'app en même temps. */
-async function claimTradesCalcLock(stamp){
-  const lockRef=doc(db,'config','tradesCalc2025');
-  try{
-    return await runTransaction(db,async tx=>{
-      const s=await tx.get(lockRef);
-      if(s.exists()&&s.data()?.stamp===stamp)return false;
-      tx.set(lockRef,{stamp,at:Date.now()},{merge:true});
-      return true;
-    });
-  }catch(e){return false;}
-}
-
-/* Relâche le verrou : indispensable si le crédit échoue après la prise du
-   verrou, sinon plus aucun client ne retenterait le calcul pour cette version. */
-async function releaseTradesCalcLock(){
-  try{
-    await setDoc(doc(db,'config','tradesCalc2025'),{stamp:null,at:Date.now()},{merge:true});
-  }catch(e){}
 }
 
 function MiniGameTrades({firebaseUser,profile,setProfile,guestCta}){
@@ -2324,10 +2204,14 @@ function MiniGameTrades({firebaseUser,profile,setProfile,guestCta}){
   );
 }
 
-function AdminTradesPanel({onClose,onDataChanged}){
-  const ADMIN_PWD='NBgAmes07310!';
-  const [pwd,setPwd]=useState('');
-  const [auth2,setAuth2]=useState(false);
+/* Panneau admin. L'accès n'est plus protégé par un mot de passe écrit dans le
+   code (lisible par tous dans le bundle JS) : il est réservé aux comptes dont
+   l'UID figure dans la collection Firestore `admins` (créée à la main depuis la
+   console Firebase). Ce contrôle d'affichage n'est qu'un confort : la vraie
+   protection, ce sont les règles Firestore, qui refusent ces écritures à tout
+   autre compte. */
+function AdminTradesPanel({onClose,onDataChanged,isAdmin}){
+  const auth2=isAdmin===true;
   const [tab,setTab]=useState('answers');
   const [answers,setAnswers]=useState({});
   const [leaderboard,setLeaderboard]=useState([]);
@@ -2335,8 +2219,6 @@ function AdminTradesPanel({onClose,onDataChanged}){
   const [msg,setMsg]=useState('');
   const [seasonName,setSeasonName]=useState('');
   const [archives,setArchives]=useState([]);
-
-  function checkPwd(){if(pwd===ADMIN_PWD)setAuth2(true);else setMsg('Mot de passe incorrect');}
 
   useEffect(()=>{
     if(!auth2)return;
@@ -2360,11 +2242,8 @@ function AdminTradesPanel({onClose,onDataChanged}){
     })();
   },[auth2]);
 
-  async function recalculateLeaderboard(currentAnswers,stamp){
+  async function recalculateLeaderboard(currentAnswers){
     const{rows,isClosed,answeredCount}=await creditAllTradesUsers(currentAnswers);
-    // On pose le verrou pour cette version : inutile que le premier joueur
-    // qui ouvre l'app refasse le calcul qu'on vient de faire.
-    if(stamp!==undefined)await claimTradesCalcLock(String(stamp));
     setLeaderboard(rows);
     return{isClosed,answeredCount};
   }
@@ -2376,7 +2255,7 @@ function AdminTradesPanel({onClose,onDataChanged}){
       const closed=answeredCount>=TRADES_PLAYERS.length;
       const stamp=Date.now();
       await setDoc(doc(db,'tradesAdmin','2025'),{answers,closed,answeredCount,updatedAt:stamp},{merge:true});
-      await recalculateLeaderboard(answers,stamp);
+      await recalculateLeaderboard(answers);
       setMsg(closed
         ?`🏁 ${answeredCount}/${TRADES_PLAYERS.length} · Jeu clôturé, points crédités !`
         :`✅ Sauvegardé · ${answeredCount}/${TRADES_PLAYERS.length} · points crédités`);
@@ -2392,10 +2271,8 @@ function AdminTradesPanel({onClose,onDataChanged}){
           <button onClick={onClose} style={{background:'none',border:'none',color:'var(--muted)',fontSize:22,cursor:'pointer'}}>✕</button>
         </div>
         {!auth2?(
-          <div style={{display:'flex',flexDirection:'column',gap:12}}>
-            <input type="password" placeholder="Mot de passe admin" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==='Enter'&&checkPwd()} style={{padding:'14px 16px',background:'var(--s1)',border:'1.5px solid var(--bdr)',borderRadius:12,color:'var(--txt)',fontSize:15,outline:'none'}}/>
-            <button onClick={checkPwd} style={{padding:'14px',background:'linear-gradient(135deg,var(--gold),var(--gold2))',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:15,cursor:'pointer'}}>Accéder</button>
-            {msg&&<div style={{color:'var(--red)',fontSize:13,textAlign:'center'}}>{msg}</div>}
+          <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6,background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,padding:'14px 16px',textAlign:'center'}}>
+            🔒 Accès réservé au compte administrateur.
           </div>
         ):(
           <div>
@@ -2458,7 +2335,7 @@ function AdminTradesPanel({onClose,onDataChanged}){
                   try{
                     const snap=await getDoc(doc(db,'tradesAdmin','2025'));
                     const stored=snap.exists()?(snap.data()?.answers||{}):{};
-                    const r=await recalculateLeaderboard(stored,snap.data()?.updatedAt);
+                    const r=await recalculateLeaderboard(stored);
                     setMsg(`🔄 Recalcul effectué · ${r.answeredCount}/${TRADES_PLAYERS.length}${r.isClosed?' · jeu clôturé':''}`);
                   }catch(e){setMsg('❌ Erreur : '+(e.message||''));}
                   setSaving(false);
@@ -3003,38 +2880,17 @@ export default function NBGames() {
     if(profile?.themeTeamIdx!==undefined)setThemeTeamIdx(profile.themeTeamIdx);
   },[profile?.teamIdx,profile?.lang,profile?.darkMode,profile?.franchiseMode,profile?.themeTeamIdx]);
 
-  // Au démarrage de l'app : le PREMIER joueur connecté déclenche le calcul et le
-  // crédit des points Trades pour TOUS les joueurs (y compris ceux ayant
-  // pronostiqué avant la mise en place du scoring). Un verrou transactionnel
-  // garantit un seul calcul par version des résultats admin.
-  const tradesCalcRef=useRef(false);
+  // Compte administrateur ? (document admins/{uid}, créé à la main dans la
+  // console Firebase). Les règles Firestore ne laissent chacun lire que SON
+  // document ; s'il n'existe pas (ou en cas d'erreur) → pas admin.
+  const [isAdmin,setIsAdmin]=useState(false);
   useEffect(()=>{
-    if(!firebaseUser||tradesCalcRef.current)return;
-    tradesCalcRef.current=true;
-    (async()=>{
-      try{
-        const snap=await getDoc(doc(db,'tradesAdmin','2025'));
-        if(!snap.exists())return;
-        const data=snap.data();
-        const answers=data.answers||{};
-        const answered=Object.keys(answers).filter(k=>answers[k]?.stayed!==undefined&&answers[k]?.stayed!==null).length;
-        if(answered===0)return;
-        const stamp=String(data.updatedAt||answered);
-        const won=await claimTradesCalcLock(stamp);
-        if(won){
-          // Le verrou est posé avant le calcul : en cas d'échec il faut le
-          // relâcher, sinon plus personne ne recréditerait cette version.
-          try{await creditAllTradesUsers(answers);}
-          catch(e){await releaseTradesCalcLock();}
-        }
-        // Rafraîchit le profil local pour afficher le score sans rechargement
-        const userSnap=await getDoc(doc(db,'users',firebaseUser.uid));
-        if(userSnap.exists()){
-          const u=userSnap.data();
-          setProfile(p=>p?{...p,points:u.points,weekPts:u.weekPts,monthPts:u.monthPts,tradesGame2025:u.tradesGame2025}:p);
-        }
-      }catch(e){}
-    })();
+    if(!firebaseUser){setIsAdmin(false);return;}
+    let cancelled=false;
+    getDoc(doc(db,'admins',firebaseUser.uid))
+      .then(s=>{if(!cancelled)setIsAdmin(s.exists());})
+      .catch(()=>{if(!cancelled)setIsAdmin(false);});
+    return()=>{cancelled=true;};
   },[firebaseUser]);
 
   // Recharge le profil depuis Firestore (points, streak…) — utilisé après une
@@ -3062,19 +2918,22 @@ export default function NBGames() {
 
   // Rattrapage des pronostics jamais crédités (voir catchUpUnscoredPronostics) :
   // à l'ouverture puis au retour au premier plan, au plus toutes les 10 min.
+  // Le calcul pour tous les joueurs est fait par la Cloud Function
+  // scorePronostics ; ici chacun ne rattrape que SES pronostics (le compte
+  // admin, lui, rattrape tout le monde, en secours de la fonction).
   const lastCatchUpRef=useRef(0);
   useEffect(()=>{
     if(screen!=="app"||!firebaseUser)return;
     async function run(){
       if(Date.now()-lastCatchUpRef.current<10*60*1000)return;
       lastCatchUpRef.current=Date.now();
-      try{if(await catchUpUnscoredPronostics(t))refreshProfile();}catch(e){console.error(e);}
+      try{if(await catchUpUnscoredPronostics(t,isAdmin?null:firebaseUser.uid))refreshProfile();}catch(e){console.error(e);}
     }
     run();
     function onVisible(){if(document.visibilityState==="visible")run();}
     document.addEventListener("visibilitychange",onVisible);
     return()=>document.removeEventListener("visibilitychange",onVisible);
-  },[screen,firebaseUser,refreshProfile,t]);
+  },[screen,firebaseUser,isAdmin,refreshProfile,t]);
 
   // Vérifie périodiquement si une nouvelle version de l'app a été déployée
   // (contourne le cache agressif de Safari/PWA sur home screen) et recharge automatiquement.
@@ -3305,8 +3164,11 @@ export default function NBGames() {
     prevScoreRef.current={home:updated.homeScore,away:updated.awayScore};
     setFeaturedMatch(p=>p?{...p,homeScore:updated.homeScore,awayScore:updated.awayScore,isFinished:updated.isFinished,isLive:updated.isLive,topScorer:updated.topScorer,topScorerPts:updated.topScorerPts}:p);
     setLastMatch(p=>p?.id===updated.id?{...p,homeScore:updated.homeScore,awayScore:updated.awayScore,isFinished:updated.isFinished,isLive:updated.isLive,topScorer:updated.topScorer,topScorerPts:updated.topScorerPts,topScorers:updated.topScorers||[]}:p);
-    if(updated.isFinished&&firebaseUser&&!autoCalcDoneRef.current[updated.id]){autoCalcDoneRef.current[updated.id]=true;autoCalculateAllUsers(updated,t);}
-  },[featuredMatch?.id,t,firebaseUser]);
+    // Calcul pour TOUS les joueurs : fait par la Cloud Function scorePronostics.
+    // Le compte admin le relance aussi depuis l'app, en secours (les règles
+    // Firestore refusent ces écritures aux autres comptes).
+    if(updated.isFinished&&firebaseUser&&isAdmin&&!autoCalcDoneRef.current[updated.id]){autoCalcDoneRef.current[updated.id]=true;autoCalculateAllUsers(updated,t);}
+  },[featuredMatch?.id,t,firebaseUser,isAdmin]);
 
   useEffect(()=>{if(screen!=="app")return;setTimeout(()=>loadGamesStatic(),500);const iv=setInterval(loadGamesStatic,300000);return()=>clearInterval(iv);},[screen,loadGamesStatic]);
   useEffect(()=>{if(screen!=="app")return;const iv=setInterval(updateLiveScore,30000);return()=>clearInterval(iv);},[screen,updateLiveScore]);
@@ -4404,7 +4266,7 @@ export default function NBGames() {
               </a>
             </div>
 
-<button onClick={()=>setShowAdminTrades(true)} style={{width:'100%',padding:'12px',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',marginBottom:8}}>⚙️ Admin Trades</button>
+            {isAdmin&&<button onClick={()=>setShowAdminTrades(true)} style={{width:'100%',padding:'12px',background:'var(--s1)',border:'1px solid var(--bdr)',borderRadius:12,color:'var(--muted)',fontSize:13,fontWeight:600,cursor:'pointer',marginBottom:8}}>⚙️ Admin</button>}
             <button className="logoutbtn" onClick={doLogout}>{t.logout}</button>
             <button
               onClick={()=>{setShowDeleteAccount(true);setDeleteConfirm("");setDeleteErr("");}}
@@ -4416,7 +4278,7 @@ export default function NBGames() {
         )}
       </div>
 
-      {showAdminTrades&&<AdminTradesPanel onClose={()=>setShowAdminTrades(false)} onDataChanged={refreshProfile}/>}
+      {showAdminTrades&&isAdmin&&<AdminTradesPanel isAdmin={isAdmin} onClose={()=>setShowAdminTrades(false)} onDataChanged={refreshProfile}/>}
 
       {/* Suppression de compte — double confirmation (exigence App Store 5.1.1(v)) */}
       {showDeleteAccount&&createPortal(

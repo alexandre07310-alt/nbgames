@@ -45,3 +45,6 @@ android-keys/
 android-twa/
 # Photos personnelles déposées à la racine
 /IMG_*.jpg
+
+# Cloud Functions
+functions/node_modules/

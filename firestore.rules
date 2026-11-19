@@ -2,21 +2,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Compte administrateur : son UID a un document dans la collection `admins`.
+    // Ces documents se créent UNIQUEMENT depuis la console Firebase (aucune
+    // écriture possible depuis l'app, voir plus bas).
+    function isAdmin() {
+      return signedIn()
+          && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── Administrateurs ───────────────────────────────────────
+    // Chacun peut seulement vérifier s'il est lui-même admin.
+    // Aucune écriture depuis l'app : ajout/retrait via la console Firebase.
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     // ── Utilisateurs ──────────────────────────────────────────
     // Lecture publique (nécessaire pour le classement temps réel)
     // Création : uniquement sur son propre document, avec validation
-    // Update : tout utilisateur authentifié peut écrire (requis pour autoCalculateAllUsers
-    //          qui calcule le scoring de TOUS les joueurs depuis le client du premier arrivant)
-    // Delete : interdit côté client
+    // Update : son propre document, ou le compte admin (clôture de saison,
+    //          reset des streaks, crédit des points Trades). Le calcul des
+    //          points de TOUS les joueurs est fait par la Cloud Function
+    //          scorePronostics, qui n'est pas soumise à ces règles.
     match /users/{userId} {
       allow read: if true;
-      allow create: if request.auth != null
+      allow create: if signedIn()
                     && request.auth.uid == userId
                     && validUserData(request.resource.data);
-      allow update: if request.auth != null;
+      allow update: if signedIn() && (request.auth.uid == userId || isAdmin());
       // Chacun peut supprimer SON PROPRE compte, et lui seul
       // (obligatoire : App Store Review 5.1.1(v), Play Data deletion)
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow delete: if signedIn() && request.auth.uid == userId;
     }
 
     // ── Réservation de pseudo ─────────────────────────────────
@@ -25,43 +46,49 @@ service cloud.firestore {
     // Suppression : uniquement si on est le propriétaire
     match /usernames/{username} {
       allow read: if true;
-      allow create: if request.auth != null
+      allow create: if signedIn()
                     && request.resource.data.uid == request.auth.uid
                     && username == username.lower();
-      allow delete: if request.auth != null
+      allow delete: if signedIn()
                     && resource.data.uid == request.auth.uid;
       allow update: if false;
     }
 
-    // ── Config app (match du jour, historique) ────────────────
-    // Lecture publique
-    // Écriture uniquement si authentifié
+    // ── Config app ────────────────────────────────────────────
+    // Lecture publique.
+    // dailyMatch / matchHistory : écrits par l'app du premier joueur qui tire
+    // le match du jour → tout compte connecté.
+    // Le reste (scoringState de la Cloud Function, etc.) : admin uniquement.
     match /config/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if (signedIn() && docId in ['dailyMatch', 'matchHistory'])
+                   || isAdmin();
     }
 
     // ── Trades de l'été : réponses admin ───────────────────────
     // Lecture publique (les joueurs comparent leurs pronostics)
-    // Écriture réservée côté client par le mot de passe admin (pas de claim serveur)
+    // Écriture : compte admin uniquement
     match /tradesAdmin/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // ── Trades de l'été : classement ───────────────────────────
+    // Écrit par le panneau admin lors du crédit des points.
+    // Chacun peut supprimer sa propre ligne (suppression de compte).
     match /tradesLeaderboard2025/{userId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create, update: if isAdmin();
+      allow delete: if signedIn() && (request.auth.uid == userId || isAdmin());
     }
 
     // ── Archives des saisons terminées ─────────────────────────
     // Lecture publique (consultation depuis l'onglet Classement)
-    // Écriture réservée à la clôture de saison (panneau admin)
+    // Écriture : compte admin uniquement (clôture de saison)
     // Suppression interdite : une saison archivée est définitive
     match /seasonArchives/{seasonId} {
       allow read: if true;
-      allow create, update: if request.auth != null;
+      allow create, update: if isAdmin();
       allow delete: if false;
     }
 
